@@ -5,7 +5,9 @@ import { useAuth } from '../context/AuthContext'
 
 const CreatePost = () => {
     const [caption, setCaption] = useState('')
+    const [file, setFile] = useState(null)
     const [preview, setPreview] = useState(null)
+    const [loading, setLoading] = useState(false)
     const { user } = useAuth()
     const navigate = useNavigate()
 
@@ -16,7 +18,6 @@ const CreatePost = () => {
             setPreview(URL.createObjectURL(selectedFile))
         }
     }
-
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -68,11 +69,11 @@ const CreatePost = () => {
 
     return (
         <div className="container">
-            <h1 className="category-title">New Story</h1>
+            <h1 className="category-title" style={{ color: 'var(--primary)', fontWeight: 900 }}>NEW STORY</h1>
             <div className="card">
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Media (Image or Video)</label>
+                        <label className="form-label">Media (Image or Video)</label>
                         <input
                             type="file"
                             accept="image/*,video/*"
@@ -81,26 +82,26 @@ const CreatePost = () => {
                         />
                     </div>
                     {preview && (
-                        <div className="file-preview" style={{ marginBottom: '1rem', borderRadius: '8px', overflow: 'hidden' }}>
-                            {file.type.startsWith('video') ? (
-                                <video src={preview} style={{ width: '100%' }} controls />
+                        <div className="file-preview" style={{ marginBottom: '1rem', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                            {file?.type.startsWith('video') ? (
+                                <video src={preview} style={{ width: '100%', display: 'block' }} controls />
                             ) : (
-                                <img src={preview} style={{ width: '100%' }} alt="Preview" />
+                                <img src={preview} style={{ width: '100%', display: 'block' }} alt="Preview" />
                             )}
                         </div>
                     )}
-
                     <div className="form-group">
-                        <label>Caption</label>
+                        <label className="form-label">Caption</label>
                         <textarea
                             value={caption}
                             onChange={(e) => setCaption(e.target.value)}
                             rows="3"
-                            placeholder="Write a caption..."
+                            placeholder="WHAT ARE YOU THINKING?"
+                            style={{ width: '100%', background: '#000', border: '1px solid var(--border)', color: 'white', padding: '1rem', fontFamily: 'inherit' }}
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading ? 'Sharing...' : 'Share Post'}
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+                        {loading ? 'SECURING DATA...' : 'SHARE TO LOCKWIDE'}
                     </button>
                 </form>
             </div>

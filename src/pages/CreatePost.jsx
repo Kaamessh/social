@@ -38,7 +38,11 @@ const CreatePost = () => {
                 .from('posts')
                 .upload(filePath, file)
 
-            if (uploadError) throw uploadError
+            if (uploadError) {
+                alert('Storage Error: ' + uploadError.message)
+                setLoading(false)
+                return
+            }
 
             // Get public URL
             const { data: { publicUrl } } = supabase.storage
@@ -57,7 +61,12 @@ const CreatePost = () => {
                     }
                 ])
 
-            if (insertError) throw insertError
+            if (insertError) {
+                alert('Database Error: ' + insertError.message)
+                setLoading(false)
+                return
+            }
+
 
             navigate('/')
         } catch (err) {

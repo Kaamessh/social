@@ -52,8 +52,11 @@ const PostCard = ({ post, user }) => {
     return (
         <div className="post-card">
             <div className="post-header">
-                <span className="post-user">{post.user_id.substring(0, 8)}...</span>
+                <span className="post-user">
+                    {post.profiles?.username || post.user_id.substring(0, 8)}
+                </span>
             </div>
+
 
             <div className="post-media">
                 {post.media_type === 'video' ? (

@@ -13,9 +13,13 @@ const CommentSection = ({ postId, user }) => {
     const fetchComments = async () => {
         const { data, error } = await supabase
             .from('comments')
-            .select('*')
+            .select(`
+                *,
+                profiles:user_id (username)
+            `)
             .eq('post_id', postId)
             .order('created_at', { ascending: true })
+
         if (data) setComments(data)
     }
 
@@ -45,21 +49,13 @@ const CommentSection = ({ postId, user }) => {
         }
     }
 
-    const handleDelete = async (commentId) => {
-        const { error } = await supabase.from('comments').delete().eq('id', commentId)
-        if (!error) setComments(comments.filter(c => c.id !== commentId))
-    }
-
     return (
         <div className="comment-section">
             <div className="comment-list">
                 {comments.map(comment => (
                     <div key={comment.id} className="comment-item">
                         <p>
-                            <strong>{comment.user_email.split('@')[0]}</strong> {comment.content}
-                            {user?.id === comment.user_id && (
-                                <button onClick={() => handleDelete(comment.id)} className="comment-delete">×</button>
-                            )}
+                            <strong>{comment.profiles?.username || comment.user_email.split('@')[0]}</strong> {comment.content}
                         </p>
                     </div>
                 ))}

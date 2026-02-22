@@ -205,13 +205,28 @@ textarea {
   font-family: inherit;
 }
 
-.btn-primary {
-  width: 100%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
+.btn-action.like-btn.active {
+  color: var(--primary);
+  animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes heartPop {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.4);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.file-preview img,
+.file-preview video {
+  max-height: 300px;
+  object-fit: cover;
+  border: 1px solid var(--border);
 }

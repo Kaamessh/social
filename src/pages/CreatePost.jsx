@@ -5,16 +5,18 @@ import { useAuth } from '../context/AuthContext'
 
 const CreatePost = () => {
     const [caption, setCaption] = useState('')
-    const [file, setFile] = useState(null)
-    const [loading, setLoading] = useState(false)
+    const [preview, setPreview] = useState(null)
     const { user } = useAuth()
     const navigate = useNavigate()
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0])
+            const selectedFile = e.target.files[0]
+            setFile(selectedFile)
+            setPreview(URL.createObjectURL(selectedFile))
         }
     }
+
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -78,6 +80,16 @@ const CreatePost = () => {
                             required
                         />
                     </div>
+                    {preview && (
+                        <div className="file-preview" style={{ marginBottom: '1rem', borderRadius: '8px', overflow: 'hidden' }}>
+                            {file.type.startsWith('video') ? (
+                                <video src={preview} style={{ width: '100%' }} controls />
+                            ) : (
+                                <img src={preview} style={{ width: '100%' }} alt="Preview" />
+                            )}
+                        </div>
+                    )}
+
                     <div className="form-group">
                         <label>Caption</label>
                         <textarea

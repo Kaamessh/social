@@ -17,8 +17,9 @@ const Feed = () => {
             setLoading(true)
             const { data, error } = await supabase
                 .from('posts')
-                .select('*')
+                .select('*, profiles:user_id(username)')
                 .order('created_at', { ascending: false })
+
 
             if (data) setPosts(data)
         } catch (err) {

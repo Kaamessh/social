@@ -25,7 +25,14 @@ const Feed = ({ type = 'all' }) => {
 
             const { data, error } = await query
 
+            if (error) {
+                console.error(error)
+                alert('Database Error: ' + error.message)
+                return
+            }
+
             if (data) setPosts(data)
+
         } catch (err) {
             console.error(err)
         } finally {

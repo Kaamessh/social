@@ -1,45 +1,33 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
-import Navbar from './components/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
+import Navbar from './components/Navbar'
 import Feed from './pages/Feed'
+import CreatePost from './pages/CreatePost'
+import Profile from './pages/Profile'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import CreatePost from './pages/CreatePost'
-import './index.css'
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <div className="app">
           <Navbar />
-          <main>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Feed />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/create"
-                element={
-                  <ProtectedRoute>
-                    <CreatePost />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-            </Routes>
-          </main>
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><Feed type="all" /></ProtectedRoute>} />
+            <Route path="/photos" element={<ProtectedRoute><Feed type="photos" /></ProtectedRoute>} />
+            <Route path="/videos" element={<ProtectedRoute><Feed type="videos" /></ProtectedRoute>} />
+            <Route path="/create" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   )
 }
 

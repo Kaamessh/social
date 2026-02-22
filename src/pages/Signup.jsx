@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext'
 const Signup = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [username, setUsername] = useState('')
+    const [phone, setPhone] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const { signUp } = useAuth()
@@ -12,13 +14,13 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        setLoading(true)
         setError('')
+        setLoading(true)
         try {
-            const { error } = await signUp(email, password)
+            // Pass username and phone as user metadata
+            const { error } = await signUp(email, password, { username, phone })
             if (error) throw error
-            alert('Signup successful! Check your email for verification if needed, or login now.')
-            navigate('/login')
+            navigate('/')
         } catch (err) {
             setError(err.message)
         } finally {
@@ -27,14 +29,33 @@ const Signup = () => {
     }
 
     return (
-        <div className="container">
-            <h1 className="category-title">Create Account</h1>
+        <div className="container" style={{ maxWidth: '400px' }}>
             <div className="card">
-
-                {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '2rem' }}>CREATE ACCOUNT</h1>
+                {error && <p style={{ color: 'var(--primary)', fontWeight: 700 }}>{error}</p>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Email</label>
+                        <label className="form-label">Username (Unique)</label>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                            placeholder="CHOOSE USERNAME"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Phone Number</label>
+                        <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            required
+                            placeholder="YOUR PHONE"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Email</label>
                         <input
                             type="email"
                             value={email}
@@ -43,7 +64,7 @@ const Signup = () => {
                         />
                     </div>
                     <div className="form-group">
-                        <label>Password</label>
+                        <label className="form-label">Password</label>
                         <input
                             type="password"
                             value={password}
@@ -51,13 +72,13 @@ const Signup = () => {
                             required
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading ? 'Signing up...' : 'Signup'}
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+                        {loading ? 'SECURING...' : 'REGISTER'}
                     </button>
                 </form>
-                <div className="auth-footer">
-                    Already have an account? <Link to="/login">Login</Link>
-                </div>
+                <p style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.8rem' }}>
+                    ALREADY REGISTERED? <Link to="/login" style={{ color: 'var(--primary)' }}>LOGIN</Link>
+                </p>
             </div>
         </div>
     )

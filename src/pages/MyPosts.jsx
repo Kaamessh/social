@@ -3,74 +3,64 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import PostCard from '../components/PostCard'
 
-const Feed = ({ type = 'all' }) => {
+const MyPosts = () => {
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
     const { user } = useAuth()
 
     useEffect(() => {
-        fetchPosts()
-    }, [type])
+        if (user) fetchMyPosts()
+    }, [user])
 
-    const fetchPosts = async () => {
+    const fetchMyPosts = async () => {
         try {
             setLoading(true)
-            let query = supabase
+            const { data, error } = await supabase
                 .from('posts')
                 .select('*, profiles:user_id(username, avatar_url)')
+                .eq('user_id', user.id)
                 .order('created_at', { ascending: false })
 
-            // Hide the current user's own posts from the main discovery feed
-            if (user) {
-                query = query.neq('user_id', user.id)
-            }
-
-            if (type === 'photos') query = query.eq('media_type', 'image')
-            if (type === 'videos') query = query.eq('media_type', 'video')
-
-
-            const { data, error } = await query
-
-            if (error) {
-                console.error(error)
-                alert('Database Error: ' + error.message)
-                return
-            }
-
+            if (error) throw error
             if (data) setPosts(data)
-
         } catch (err) {
             console.error(err)
+            alert('Error fetching your posts: ' + err.message)
         } finally {
             setLoading(false)
         }
     }
 
+    const handleDeleteSuccess = (postId) => {
+        setPosts(posts.filter(p => p.id !== postId))
+    }
+
     return (
         <div className="container">
             <div className="feed-header">
-                <h1 className="feed-title">{type.toUpperCase()}</h1>
+                <h1 className="feed-title">MY POSTS</h1>
             </div>
 
             {loading ? (
-                <p>ACCESSING CRYPTOGRAPHIC FEED...</p>
+                <p>ACCESSING YOUR SECURE DATA...</p>
             ) : (
                 posts.map(post => (
                     <PostCard
                         key={post.id}
                         post={post}
                         user={user}
+                        onDeleteSuccess={handleDeleteSuccess}
                     />
                 ))
             )}
 
             {!loading && posts.length === 0 && (
                 <div style={{ padding: '4rem 0', textAlign: 'center', border: '1px dashed var(--border)' }}>
-                    <p style={{ color: 'var(--text-muted)' }}>NO DATA FOUND IN THIS SECTION</p>
+                    <p style={{ color: 'var(--text-muted)' }}>YOU HAVEN'T SHARED ANY STORIES YET</p>
                 </div>
             )}
         </div>
     )
 }
 
-export default Feed
+export default MyPosts

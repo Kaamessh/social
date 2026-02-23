@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import CommentSection from './CommentSection'
 
-const PostCard = ({ post, user }) => {
+const PostCard = ({ post, user, onDeleteSuccess }) => {
     const [likes, setLikes] = useState([])
     const [isLiked, setIsLiked] = useState(false)
     const [showComments, setShowComments] = useState(false)
@@ -49,19 +49,51 @@ const PostCard = ({ post, user }) => {
         }
     }
 
+    const handleDelete = async () => {
+        if (!window.confirm('ARE YOU SURE YOU WANT TO DELETE THIS STORY?')) return
+
+        try {
+            const { error } = await supabase
+                .from('posts')
+                .delete()
+                .eq('id', post.id)
+
+            if (error) throw error
+
+            if (onDeleteSuccess) {
+                onDeleteSuccess(post.id)
+            } else {
+                window.location.reload()
+            }
+        } catch (err) {
+            alert('DELETE FAIL: ' + err.message)
+        }
+    }
+
     return (
         <div className="post-card">
-            <div className="post-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--border)', overflow: 'hidden', border: '1px solid var(--primary)' }}>
-                    {post.profiles?.avatar_url ? (
-                        <img src={post.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                        <div style={{ textAlign: 'center', padding: '4px', fontSize: '0.8rem' }}>👤</div>
-                    )}
+            <div className="post-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--border)', overflow: 'hidden', border: '1px solid var(--primary)' }}>
+                        {post.profiles?.avatar_url ? (
+                            <img src={post.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '4px', fontSize: '0.8rem' }}>👤</div>
+                        )}
+                    </div>
+                    <span className="username-tag">
+                        {post.profiles?.username || post.user_id.substring(0, 8)}
+                    </span>
                 </div>
-                <span className="username-tag">
-                    {post.profiles?.username || post.user_id.substring(0, 8)}
-                </span>
+
+                {user?.id === post.user_id && (
+                    <button
+                        onClick={handleDelete}
+                        style={{ background: 'none', border: '1px solid var(--primary)', color: 'var(--primary)', fontSize: '0.6rem', padding: '4px 8px', cursor: 'pointer', fontWeight: 800 }}
+                    >
+                        DELETE
+                    </button>
+                )}
             </div>
 
             <div className="post-media">

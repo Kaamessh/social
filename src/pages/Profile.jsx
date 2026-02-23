@@ -8,6 +8,15 @@ const Profile = () => {
     const [loading, setLoading] = useState(true)
     const [uploading, setUploading] = useState(false)
 
+    // Settings States
+    const [showSettings, setShowSettings] = useState(false)
+    const [newUsername, setNewUsername] = useState('')
+    const [newPhone, setNewPhone] = useState('')
+    const [newEmail, setNewEmail] = useState('')
+    const [usernameError, setUsernameError] = useState('')
+    const [checkingUsername, setCheckingUsername] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+
     useEffect(() => {
         if (user) fetchProfile()
     }, [user])
@@ -20,11 +29,87 @@ const Profile = () => {
                 .eq('id', user.id)
                 .single()
 
-            if (data) setProfile(data)
+            if (data) {
+                setProfile(data)
+                setNewUsername(data.username)
+                setNewPhone(data.phone_number || '')
+                setNewEmail(user.email)
+            }
         } catch (err) {
             console.error(err)
         } finally {
             setLoading(false)
+        }
+    }
+
+    // Real-time username check for Settings
+    useEffect(() => {
+        if (!showSettings || newUsername === profile?.username) {
+            setUsernameError('')
+            return
+        }
+
+        const checkAvailability = async () => {
+            if (newUsername.length < 3) {
+                setUsernameError('')
+                return
+            }
+
+            setCheckingUsername(true)
+            setUsernameError('')
+
+            try {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('username')
+                    .ilike('username', newUsername)
+                    .single()
+
+                if (data) {
+                    setUsernameError('username was not available')
+                }
+            } catch (err) {
+                // Not found = available
+            } finally {
+                setCheckingUsername(false)
+            }
+        }
+
+        const timeoutId = setTimeout(checkAvailability, 500)
+        return () => clearTimeout(timeoutId)
+    }, [newUsername, showSettings, profile])
+
+    const handleUpdateSettings = async (e) => {
+        e.preventDefault()
+        if (usernameError || checkingUsername) return
+        setIsSaving(true)
+
+        try {
+            // 1. Update Profile (Username/Phone)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    username: newUsername,
+                    phone_number: newPhone
+                })
+                .eq('id', user.id)
+
+            if (profileError) throw profileError
+
+            // 2. Update Auth Email if changed
+            if (newEmail !== user.email) {
+                const { error: authError } = await supabase.auth.updateUser({ email: newEmail })
+                if (authError) throw authError
+                alert('CONFIRMATION EMAIL SENT TO NEW ADDRESS')
+            }
+
+            setProfile({ ...profile, username: newUsername, phone_number: newPhone })
+            setShowSettings(false)
+            alert('IDENTITY SETTINGS UPDATED SECURELY')
+        } catch (err) {
+            alert('UPDATE FAIL: ' + err.message)
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -37,19 +122,16 @@ const Profile = () => {
             const fileName = `${user.id}.${fileExt}`
             const filePath = `avatars/${fileName}`
 
-            // Upload to storage
             const { error: uploadError } = await supabase.storage
-                .from('posts') // Using existing 'posts' bucket for simplicity, or create 'avatars'
+                .from('posts')
                 .upload(filePath, file, { upsert: true })
 
             if (uploadError) throw uploadError
 
-            // Get URL
             const { data: { publicUrl } } = supabase.storage
                 .from('posts')
                 .getPublicUrl(filePath)
 
-            // Update profile
             const { error: updateError } = await supabase
                 .from('profiles')
                 .update({ avatar_url: publicUrl })
@@ -96,28 +178,84 @@ const Profile = () => {
 
                 <div className="profile-name">{profile?.username || 'USER'}</div>
 
-                <div className="profile-info-grid">
-                    <div className="info-item">
-                        <label>Verified Email</label>
-                        <p>{user.email}</p>
-                    </div>
-                    <div className="info-item">
-                        <label>Phone Identity</label>
-                        <p>{profile?.phone_number || 'NOT SET'}</p>
-                    </div>
-                    <div className="info-item">
-                        <label>User ID</label>
-                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{user.id}</p>
-                    </div>
-                    <div className="info-item">
-                        <label>Account Status</label>
-                        <p style={{ color: 'var(--primary)', fontWeight: 800 }}>ACTIVE / SECURE</p>
-                    </div>
+                <div style={{ marginTop: '2rem' }}>
+                    <button
+                        onClick={() => setShowSettings(!showSettings)}
+                        className="btn btn-primary"
+                        style={{ fontSize: '0.7rem', padding: '0.5rem 1.5rem' }}
+                    >
+                        {showSettings ? 'EXIT SETTINGS' : 'IDENTITY SETTINGS'}
+                    </button>
                 </div>
+
+                {showSettings ? (
+                    <div className="card" style={{ marginTop: '2rem', textAlign: 'left', border: '1px solid var(--border)' }}>
+                        <form onSubmit={handleUpdateSettings}>
+                            <div className="form-group">
+                                <label className="form-label">Change Username</label>
+                                <input
+                                    type="text"
+                                    value={newUsername}
+                                    onChange={(e) => setNewUsername(e.target.value.trim())}
+                                    required
+                                    style={{ borderColor: usernameError ? 'var(--primary)' : '' }}
+                                />
+                                {checkingUsername && <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Security Check...</p>}
+                                {usernameError && <p style={{ fontSize: '0.6rem', color: 'var(--primary)', fontWeight: 800 }}>{usernameError.toUpperCase()}</p>}
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Update Phone Number</label>
+                                <input
+                                    type="tel"
+                                    value={newPhone}
+                                    onChange={(e) => setNewPhone(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Update Email Address</label>
+                                <input
+                                    type="email"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    required
+                                />
+                                <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '4px' }}>*Email updates require verification login</p>
+                            </div>
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
+                                style={{ width: '100%' }}
+                                disabled={isSaving || checkingUsername || !!usernameError}
+                            >
+                                {isSaving ? 'SECURING...' : 'SAVE SETTINGS'}
+                            </button>
+                        </form>
+                    </div>
+                ) : (
+                    <div className="profile-info-grid">
+                        <div className="info-item">
+                            <label>Verified Email</label>
+                            <p>{user.email}</p>
+                        </div>
+                        <div className="info-item">
+                            <label>Phone Identity</label>
+                            <p>{profile?.phone_number || 'NOT SET'}</p>
+                        </div>
+                        <div className="info-item">
+                            <label>User ID</label>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{user.id}</p>
+                        </div>
+                        <div className="info-item">
+                            <label>Account Status</label>
+                            <p style={{ color: 'var(--primary)', fontWeight: 800 }}>ACTIVE / SECURE</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <h2 className="feed-title" style={{ fontSize: '1rem', marginBottom: '2rem' }}>DATA FOOTPRINT</h2>
-            <p style={{ color: 'var(--text-muted)' }}>All your shared media and interactions are encrypted and stored in the LockWide network.</p>
+            <p style={{ color: 'var(--text-muted)' }}>All your shared media and interactions are encrypted and stored in the Helloall network.</p>
         </div>
     )
 }

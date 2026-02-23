@@ -254,9 +254,10 @@ const Profile = () => {
                 </div>
 
                 <form onSubmit={sendMessage} style={{ display: 'flex', gap: '1rem', padding: '1rem 0' }}>
-                    <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="ENTER SECURE TRANSMISSION..." style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', color: 'white', padding: '1rem' }} />
+                    <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="ENTER SECURE TRANSMISSION..." style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '1rem' }} />
                     <button type="submit" className="btn btn-primary">SEND</button>
                 </form>
+
             </div>
         )
     }

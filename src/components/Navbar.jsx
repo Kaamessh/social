@@ -32,8 +32,9 @@ const Navbar = () => {
             <div className="nav-container">
                 <Link to="/" className="nav-logo">
                     <img src="/favicon.svg" alt="Logo" />
-                    HELLOALL
+                    <span style={{ color: 'var(--text)', fontWeight: 900, letterSpacing: '2px', fontSize: '1.2rem' }}>HELLOALL</span>
                 </Link>
+
 
                 <div className="nav-links">
                     {user ? (

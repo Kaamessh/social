@@ -258,3 +258,38 @@ input:focus {
   font-weight: 600;
   margin: 0.25rem 0;
 }
+
+/* Search Enhancements */
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  z-index: 2000;
+  box-shadow: var(--card-shadow);
+  margin-top: 5px;
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: 0.2s;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-item:last-child {
+  border-bottom: none;
+}
+
+.search-item:hover {
+  background: var(--surface-hover);
+}
+
+.search-item img {
+  border-radius: 50%;
+}

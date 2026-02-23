@@ -1,6 +1,8 @@
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate, Link } from 'react-router-dom'
 import PostCard from '../components/PostCard'
-import { Link } from 'react-router-dom'
 
 
 const Feed = ({ type = 'all' }) => {

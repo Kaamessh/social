@@ -22,10 +22,11 @@ const Profile = () => {
     const [checkingUsername, setCheckingUsername] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
 
-    // Chat Specific States
     const [messages, setMessages] = useState([])
     const [newMessage, setNewMessage] = useState('')
+    const [isMediaLoading, setIsMediaLoading] = useState(false)
     const scrollRef = useRef()
+
 
     const targetUserId = userId || user?.id
     const isOwnProfile = !userId || userId === user?.id
@@ -105,19 +106,42 @@ const Profile = () => {
             .eq('receiver_id', user.id)
     }
 
-    const sendMessage = async (e) => {
-        e.preventDefault()
-        if (!newMessage.trim()) return
+    const sendMessage = async (e, mediaUrl = null) => {
+        if (e) e.preventDefault()
+        if (!newMessage.trim() && !mediaUrl) return
+
         const { data, error } = await supabase.from('messages').insert([{
             sender_id: user.id,
             receiver_id: targetUserId,
-            content: newMessage.trim()
+            content: newMessage.trim(),
+            media_url: mediaUrl
         }]).select()
+
         if (!error) {
             setMessages([...messages, data[0]])
             setNewMessage('')
         }
     }
+
+    const handleChatMediaUpload = async (e) => {
+        try {
+            if (!e.target.files || e.target.files.length === 0) return
+            setIsMediaLoading(true)
+            const file = e.target.files[0]
+            const filePath = `chats/${user.id}_${Date.now()}.${file.name.split('.').pop()}`
+
+            const { error: uploadError } = await supabase.storage.from('posts').upload(filePath, file)
+            if (uploadError) throw uploadError
+
+            const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(filePath)
+            await sendMessage(null, publicUrl)
+        } catch (err) {
+            alert('MEDIA SEND FAIL: ' + err.message)
+        } finally {
+            setIsMediaLoading(false)
+        }
+    }
+
 
     const handleAvatarUpload = async (e) => {
         try {
@@ -239,97 +263,103 @@ const Profile = () => {
                             alignSelf: msg.sender_id === user.id ? 'flex-end' : 'flex-start',
                             maxWidth: '75%',
                             background: msg.sender_id === user.id ? 'var(--primary)' : 'var(--surface)',
-                            color: msg.sender_id === user.id ? 'white' : 'var(--text)',
-                            padding: '0.8rem 1.2rem',
-                            border: '1px solid var(--border)',
-                            fontSize: '0.9rem',
-                            boxShadow: 'var(--card-shadow)'
-                        }}>
-
-                            {msg.content}
+                            {msg.media_url && (
+                                <img 
+                                    src={msg.media_url} 
+                                    style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block', marginBottom: '8px' }} 
+                                    alt="Message media"
+                                />
+                            )}
+                            {msg.content && <p style={{ margin: 0 }}>{msg.content}</p>}
                             <div style={{ fontSize: '0.5rem', marginTop: '5px', opacity: 0.6 }}>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
+
                     ))}
                     <div ref={scrollRef} />
                 </div>
 
-                <form onSubmit={sendMessage} style={{ display: 'flex', gap: '1rem', padding: '1rem 0' }}>
+                <form onSubmit={sendMessage} style={{ display: 'flex', gap: '1rem', padding: '1rem 0', alignItems: 'center' }}>
+                    <label style={{ cursor: 'pointer', padding: '10px', background: 'var(--surface)', border: '1px solid var(--border)', fontWeight: 900 }}>
+                        {isMediaLoading ? '⏳' : '📷'}
+                        <input type="file" hidden accept="image/*" onChange={handleChatMediaUpload} disabled={isMediaLoading} />
+                    </label>
                     <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="ENTER SECURE TRANSMISSION..." style={{ flex: 1, background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)', padding: '1rem' }} />
                     <button type="submit" className="btn btn-primary">SEND</button>
                 </form>
 
-            </div>
+
+            </div >
         )
     }
 
-    // Sub-view: Account Control
-    if (view === 'account') {
-        return (
-            <div className="container" style={{ maxWidth: '500px', marginTop: '4rem' }}>
-                <button onClick={() => setView('profile')} className="nav-link" style={{ marginBottom: '2rem', border: 'none', background: 'none', cursor: 'pointer' }}>← PROFILE</button>
-                <div className="card">
-                    <h2 style={{ fontSize: '1.2rem', fontWeight: 900, marginBottom: '2rem' }}>ACCOUNT CONTROL</h2>
-                    <div onClick={() => { setView('edit-username'); setTempValue(profile.username); }} style={{ borderBottom: '1px solid var(--border)', padding: '1rem 0', cursor: 'pointer' }}>
-                        <label className="form-label">USERNAME</label>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>{profile.username}</span> <span style={{ color: 'var(--primary)', fontWeight: 800 }}>EDIT →</span>
-                        </div>
-                    </div>
-                    <div onClick={() => { setView('edit-phone'); setTempValue(profile.phone_number || ''); }} style={{ borderBottom: '1px solid var(--border)', padding: '1rem 0', cursor: 'pointer', marginTop: '1rem' }}>
-                        <label className="form-label">PHONE</label>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>{profile.phone_number || 'NOT SET'}</span> <span style={{ color: 'var(--primary)', fontWeight: 800 }}>EDIT →</span>
-                        </div>
-                    </div>
-                    <button onClick={() => { supabase.auth.signOut(); window.location.href = '/login'; }} className="btn btn-outline" style={{ width: '100%', marginTop: '2rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}>LOGOUT</button>
-                </div>
-            </div>
-        )
-    }
-
-    // Default: Main Profile View
+// Sub-view: Account Control
+if (view === 'account') {
     return (
-        <div className="container">
-            <div className="profile-hero" style={{ border: 'none', background: 'none', textAlign: 'center' }}>
-                <div style={{ width: '130px', height: '130px', margin: '0 auto', border: '3px solid var(--primary)', overflow: 'hidden' }}>
-                    {profile?.avatar_url ? <img src={profile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ fontSize: '2.5rem', padding: '2.5rem' }}>👤</div>}
-                </div>
-                <h1 style={{ marginTop: '1.5rem', fontSize: '2.5rem', fontWeight: 900 }}>{profile?.username.toUpperCase()}</h1>
-
-                <div style={{ marginTop: '1.5rem' }}>
-                    {isOwnProfile ? (
-                        <label className="btn btn-primary" style={{ padding: '0.5rem 2rem', fontSize: '0.7rem' }}>
-                            {uploading ? 'SYNCING...' : 'CHANGE PHOTO'}
-                            <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
-                        </label>
-                    ) : (
-                        <button onClick={() => setView('chat-setup')} className="btn btn-primary" style={{ padding: '0.5rem 2rem', fontSize: '0.7rem' }}>
-                            📩 MESSAGE
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            <div style={{ marginTop: '4rem' }}>
-                <h2 className="feed-title" style={{ fontSize: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
-                    {isOwnProfile ? 'YOUR STORIES' : `${profile?.username.toUpperCase()}'S STORIES`}
-                </h2>
-                {posts.length > 0 ? (
-                    <div style={{ marginTop: '2rem' }}>
-                        {posts.map(post => <PostCard key={post.id} post={post} user={user} onDeleteSuccess={handleDeleteSuccess} />)}
+        <div className="container" style={{ maxWidth: '500px', marginTop: '4rem' }}>
+            <button onClick={() => setView('profile')} className="nav-link" style={{ marginBottom: '2rem', border: 'none', background: 'none', cursor: 'pointer' }}>← PROFILE</button>
+            <div className="card">
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 900, marginBottom: '2rem' }}>ACCOUNT CONTROL</h2>
+                <div onClick={() => { setView('edit-username'); setTempValue(profile.username); }} style={{ borderBottom: '1px solid var(--border)', padding: '1rem 0', cursor: 'pointer' }}>
+                    <label className="form-label">USERNAME</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{profile.username}</span> <span style={{ color: 'var(--primary)', fontWeight: 800 }}>EDIT →</span>
                     </div>
-                ) : (
-                    <div style={{ padding: '5rem 0', textAlign: 'center', opacity: 0.5 }}><p>NO STORIES BROADCASTED</p></div>
-                )}
+                </div>
+                <div onClick={() => { setView('edit-phone'); setTempValue(profile.phone_number || ''); }} style={{ borderBottom: '1px solid var(--border)', padding: '1rem 0', cursor: 'pointer', marginTop: '1rem' }}>
+                    <label className="form-label">PHONE</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{profile.phone_number || 'NOT SET'}</span> <span style={{ color: 'var(--primary)', fontWeight: 800 }}>EDIT →</span>
+                    </div>
+                </div>
+                <button onClick={() => { supabase.auth.signOut(); window.location.href = '/login'; }} className="btn btn-outline" style={{ width: '100%', marginTop: '2rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}>LOGOUT</button>
             </div>
-
-            {isOwnProfile && (
-                <button onClick={() => setView('account')} style={{ position: 'fixed', bottom: '2rem', right: '2rem', width: '60px', height: '60px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 900, fontSize: '0.5rem', cursor: 'pointer', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: '1.2rem' }}>⚙️</span>ACCOUNT
-                </button>
-            )}
         </div>
     )
+}
+
+// Default: Main Profile View
+return (
+    <div className="container">
+        <div className="profile-hero" style={{ border: 'none', background: 'none', textAlign: 'center' }}>
+            <div style={{ width: '130px', height: '130px', margin: '0 auto', border: '3px solid var(--primary)', overflow: 'hidden' }}>
+                {profile?.avatar_url ? <img src={profile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ fontSize: '2.5rem', padding: '2.5rem' }}>👤</div>}
+            </div>
+            <h1 style={{ marginTop: '1.5rem', fontSize: '2.5rem', fontWeight: 900 }}>{profile?.username.toUpperCase()}</h1>
+
+            <div style={{ marginTop: '1.5rem' }}>
+                {isOwnProfile ? (
+                    <label className="btn btn-primary" style={{ padding: '0.5rem 2rem', fontSize: '0.7rem' }}>
+                        {uploading ? 'SYNCING...' : 'CHANGE PHOTO'}
+                        <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                    </label>
+                ) : (
+                    <button onClick={() => setView('chat-setup')} className="btn btn-primary" style={{ padding: '0.5rem 2rem', fontSize: '0.7rem' }}>
+                        📩 MESSAGE
+                    </button>
+                )}
+            </div>
+        </div>
+
+        <div style={{ marginTop: '4rem' }}>
+            <h2 className="feed-title" style={{ fontSize: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+                {isOwnProfile ? 'YOUR STORIES' : `${profile?.username.toUpperCase()}'S STORIES`}
+            </h2>
+            {posts.length > 0 ? (
+                <div style={{ marginTop: '2rem' }}>
+                    {posts.map(post => <PostCard key={post.id} post={post} user={user} onDeleteSuccess={handleDeleteSuccess} />)}
+                </div>
+            ) : (
+                <div style={{ padding: '5rem 0', textAlign: 'center', opacity: 0.5 }}><p>NO STORIES BROADCASTED</p></div>
+            )}
+        </div>
+
+        {isOwnProfile && (
+            <button onClick={() => setView('account')} style={{ position: 'fixed', bottom: '2rem', right: '2rem', width: '60px', height: '60px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 900, fontSize: '0.5rem', cursor: 'pointer', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '1.2rem' }}>⚙️</span>ACCOUNT
+            </button>
+        )}
+    </div>
+)
 }
 
 export default Profile

@@ -115,8 +115,9 @@ const Messages = () => {
                                         <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{new Date(conv.lastMessage.created_at).toLocaleTimeString()}</span>
                                     </div>
                                     <p style={{ margin: '5px 0 0', fontSize: '0.8rem', opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {conv.lastMessage.content}
+                                        {conv.lastMessage.content || (conv.lastMessage.media_url ? '📷 PHOTO' : 'SECURE MESSAGE...')}
                                     </p>
+
                                 </div>
 
                                 {conv.unreadCount > 0 && (

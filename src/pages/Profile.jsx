@@ -186,6 +186,18 @@ const Profile = () => {
                     >
                         {showSettings ? 'EXIT SETTINGS' : 'IDENTITY SETTINGS'}
                     </button>
+                    {!showSettings && (
+                        <button
+                            onClick={async () => {
+                                await supabase.auth.signOut()
+                                window.location.href = '/login'
+                            }}
+                            className="btn btn-outline"
+                            style={{ fontSize: '0.7rem', padding: '0.5rem 1.5rem', marginLeft: '1rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                        >
+                            LOGOUT
+                        </button>
+                    )}
                 </div>
 
                 {showSettings ? (

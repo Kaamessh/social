@@ -51,12 +51,18 @@ const PostCard = ({ post, user }) => {
 
     return (
         <div className="post-card">
-            <div className="post-header">
-                <span className="post-user">
+            <div className="post-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--border)', overflow: 'hidden', border: '1px solid var(--primary)' }}>
+                    {post.profiles?.avatar_url ? (
+                        <img src={post.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                        <div style={{ textAlign: 'center', padding: '4px', fontSize: '0.8rem' }}>👤</div>
+                    )}
+                </div>
+                <span className="username-tag">
                     {post.profiles?.username || post.user_id.substring(0, 8)}
                 </span>
             </div>
-
 
             <div className="post-media">
                 {post.media_type === 'video' ? (
@@ -70,17 +76,27 @@ const PostCard = ({ post, user }) => {
                 <button
                     className={`btn-action like-btn ${isLiked ? 'active' : ''}`}
                     onClick={toggleLike}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
                 >
-                    {isLiked ? '❤️' : '🤍'} {likes.length}
+                    {isLiked ? '❤️' : '🤍'} <span style={{ fontSize: '0.8rem', color: 'var(--text)' }}>{likes.length}</span>
                 </button>
-                <button className="btn-action" onClick={() => setShowComments(!showComments)}>
-                    💬 Comment
+                <button
+                    className="btn-action"
+                    onClick={() => setShowComments(!showComments)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 800 }}
+                >
+                    💬 COMMENTS
                 </button>
             </div>
 
-            <div className="post-content">
-                <p><strong>{post.user_id.substring(0, 8)}</strong> {post.caption}</p>
-                <p className="post-date">{new Date(post.created_at).toLocaleDateString()}</p>
+            <div className="post-content" style={{ padding: '0 1.5rem 1.5rem' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                    <span style={{ fontWeight: 800, marginRight: '8px' }}>{post.profiles?.username || 'USER'}</span>
+                    {post.caption}
+                </p>
+                <p className="post-date" style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '8px', textTransform: 'uppercase' }}>
+                    {new Date(post.created_at).toLocaleDateString()}
+                </p>
             </div>
 
             {showComments && <CommentSection postId={post.id} user={user} />}

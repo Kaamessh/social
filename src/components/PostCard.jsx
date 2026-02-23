@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import CommentSection from './CommentSection'
+
 
 const PostCard = ({ post, user, onDeleteSuccess }) => {
     const [likes, setLikes] = useState([])
@@ -73,7 +75,7 @@ const PostCard = ({ post, user, onDeleteSuccess }) => {
     return (
         <div className="post-card">
             <div className="post-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Link to={`/profile/${post.user_id}`} style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--border)', overflow: 'hidden', border: '1px solid var(--primary)' }}>
                         {post.profiles?.avatar_url ? (
                             <img src={post.profiles.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -84,7 +86,7 @@ const PostCard = ({ post, user, onDeleteSuccess }) => {
                     <span className="username-tag">
                         {post.profiles?.username || post.user_id.substring(0, 8)}
                     </span>
-                </div>
+                </Link>
 
                 {user?.id === post.user_id && (
                     <button

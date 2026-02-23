@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import PostCard from '../components/PostCard'
 
 const Profile = () => {
     const { user } = useAuth()
+    const { userId } = useParams()
     const [profile, setProfile] = useState(null)
     const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
     const [uploading, setUploading] = useState(false)
+
+    // Determine if browsing own profile
+    const targetUserId = userId || user?.id
+    const isOwnProfile = !userId || userId === user?.id
 
     // View States: 'profile', 'account', 'edit-username', 'edit-phone', 'edit-email'
     const [view, setView] = useState('profile')
@@ -20,14 +26,14 @@ const Profile = () => {
     const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
-        if (user) {
+        if (targetUserId) {
             fetchProfile()
             fetchMyPosts()
         }
-    }, [user])
+    }, [targetUserId])
 
     const fetchProfile = async () => {
-        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        const { data } = await supabase.from('profiles').select('*').eq('id', targetUserId).single()
         if (data) setProfile(data)
     }
 
@@ -35,7 +41,7 @@ const Profile = () => {
         const { data } = await supabase
             .from('posts')
             .select('*, profiles:user_id(username, avatar_url)')
-            .eq('user_id', user.id)
+            .eq('user_id', targetUserId)
             .order('created_at', { ascending: false })
         if (data) setPosts(data)
         setLoading(false)
@@ -208,14 +214,18 @@ const Profile = () => {
 
                 <h1 className="profile-name" style={{ marginTop: '1rem', fontSize: '2.5rem' }}>{profile?.username.toUpperCase()}</h1>
 
-                <label className="btn btn-primary" style={{ display: 'inline-block', marginTop: '1rem', fontSize: '0.6rem', padding: '0.4rem 1rem' }}>
-                    {uploading ? 'UPLOADING...' : 'CHANGE PHOTO'}
-                    <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
-                </label>
+                {isOwnProfile && (
+                    <label className="btn btn-primary" style={{ display: 'inline-block', marginTop: '1rem', fontSize: '0.6rem', padding: '0.4rem 1rem' }}>
+                        {uploading ? 'UPLOADING...' : 'CHANGE PHOTO'}
+                        <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                    </label>
+                )}
             </div>
 
             <div style={{ marginTop: '4rem' }}>
-                <h2 className="feed-title" style={{ fontSize: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>YOUR STORIES</h2>
+                <h2 className="feed-title" style={{ fontSize: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+                    {isOwnProfile ? 'YOUR STORIES' : `${profile?.username.toUpperCase()}'S STORIES`}
+                </h2>
                 {posts.length > 0 ? (
                     <div style={{ marginTop: '2rem' }}>
                         {posts.map(post => (
@@ -234,33 +244,36 @@ const Profile = () => {
                 )}
             </div>
 
-            {/* Floating Account Button */}
-            <button
-                onClick={() => setView('account')}
-                style={{
-                    position: 'fixed',
-                    bottom: '2rem',
-                    right: '2rem',
-                    width: '60px',
-                    height: '60px',
-                    borderRadius: '0',
-                    background: 'var(--primary)',
-                    color: 'white',
-                    border: 'none',
-                    fontWeight: 900,
-                    fontSize: '0.4rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 10px 30px rgba(255, 30, 30, 0.4)',
-                    zIndex: 1001,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}
-            >
-                <span style={{ fontSize: '1.2rem' }}>⚙️</span>
-                ACCOUNT
-            </button>
+            {/* Floating Account Button - Only for owner */}
+            {isOwnProfile && (
+                <button
+                    onClick={() => setView('account')}
+                    style={{
+                        position: 'fixed',
+                        bottom: '2rem',
+                        right: '2rem',
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '0',
+                        background: 'var(--primary)',
+                        color: 'white',
+                        border: 'none',
+                        fontWeight: 900,
+                        fontSize: '0.4rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 10px 30px rgba(255, 30, 30, 0.4)',
+                        zIndex: 1001,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    <span style={{ fontSize: '1.2rem' }}>⚙️</span>
+                    ACCOUNT
+                </button>
+            )}
+
         </div>
     )
 }

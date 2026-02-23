@@ -52,12 +52,12 @@ body {
   gap: 8px;
 }
 
-.nav-logo::before {
-  content: 'L';
-  background: var(--primary);
-  padding: 2px 8px;
-  color: white;
+.nav-logo img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
+
 
 .nav-links {
   display: flex;

@@ -110,7 +110,7 @@ const CreatePost = () => {
                         />
                     </div>
                     <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
-                        {loading ? 'SECURING DATA...' : 'SHARE TO LOCKWIDE'}
+                        {loading ? 'SECURING DATA...' : 'SHARE TO HELLOALL'}
                     </button>
                 </form>
             </div>

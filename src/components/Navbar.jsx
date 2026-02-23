@@ -14,7 +14,10 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <div className="nav-container">
-                <Link to="/" className="nav-logo">LOCKWIDE</Link>
+                <Link to="/" className="nav-logo">
+                    <img src="/favicon.svg" alt="Logo" />
+                    HELLOALL
+                </Link>
 
                 <div className="nav-links">
                     {user ? (

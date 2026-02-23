@@ -18,23 +18,34 @@ const Chat = () => {
             fetchMessages()
             markAsRead()
 
-            // Real-time subscription
-            const subscription = supabase
-                .channel('public:messages')
+            // Real-time subscription for new messages
+            const channel = supabase.channel(`chat_${receiverId}`)
+
+            channel
                 .on('postgres_changes', {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'messages',
-                    filter: `sender_id=eq.${receiverId},receiver_id=eq.${user.id}`
+                    filter: `receiver_id=eq.${user.id}`
                 }, (payload) => {
-                    setMessages(prev => [...prev, payload.new])
-                    markAsRead()
+                    // Only add if it's from the person we are currently chatting with
+                    if (payload.new.sender_id === receiverId) {
+                        setMessages(prev => {
+                            // Prevent duplicate entries
+                            if (prev.find(m => m.id === payload.new.id)) return prev
+                            return [...prev, payload.new]
+                        })
+                        markAsRead()
+                    }
                 })
-                .subscribe()
+                .subscribe((status) => {
+                    console.log('REALTIME STATUS:', status)
+                })
 
             return () => {
-                supabase.removeChannel(subscription)
+                supabase.removeChannel(channel)
             }
+
         }
     }, [user, receiverId])
 

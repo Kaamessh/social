@@ -9,8 +9,28 @@ const Messages = () => {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        if (user) fetchConversations()
+        if (user) {
+            fetchConversations()
+
+            // Real-time inbox listener
+            const channel = supabase
+                .channel('global_inbox')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `receiver_id=eq.${user.id}`
+                }, () => {
+                    fetchConversations() // Refresh list on new message
+                })
+                .subscribe()
+
+            return () => {
+                supabase.removeChannel(channel)
+            }
+        }
     }, [user])
+
 
     const fetchConversations = async () => {
         try {

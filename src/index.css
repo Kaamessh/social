@@ -3,15 +3,16 @@
 :root {
   --primary: #ff1e1e;
   /* LockWide Red */
-  --bg: #000000;
-  --surface: #111111;
-  --surface-hover: #1a1a1a;
-  --text: #ffffff;
-  --text-muted: #888888;
-  --border: #222222;
+  --bg: #ffffff;
+  --surface: #fcfcfc;
+  --surface-hover: #f5f5f5;
+  --text: #000000;
+  --text-muted: #555555;
+  --border: #dddddd;
   --radius: 0px;
   /* Sharp, corporate look */
 }
+
 
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -23,9 +24,10 @@ body {
 
 /* Navbar: Structured & Minimal */
 .navbar {
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
+
   padding: 1rem 0;
   position: sticky;
   top: 0;
@@ -134,10 +136,11 @@ body {
 }
 
 .post-media {
-  background: #000;
+  background: #f0f0f0;
   width: 100%;
   aspect-ratio: 16/9;
 }
+
 
 .post-media img,
 .post-media video {
@@ -190,12 +193,13 @@ body {
 input {
   width: 100%;
   padding: 1rem;
-  background: #000;
+  background: var(--surface);
   border: 1px solid var(--border);
-  color: white;
+  color: var(--text);
   font-family: inherit;
   box-sizing: border-box;
 }
+
 
 input:focus {
   outline: none;

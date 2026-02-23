@@ -242,8 +242,10 @@ const Profile = () => {
                             color: msg.sender_id === user.id ? 'white' : 'var(--text)',
                             padding: '0.8rem 1.2rem',
                             border: '1px solid var(--border)',
-                            fontSize: '0.9rem'
+                            fontSize: '0.9rem',
+                            boxShadow: 'var(--card-shadow)'
                         }}>
+
                             {msg.content}
                             <div style={{ fontSize: '0.5rem', marginTop: '5px', opacity: 0.6 }}>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>

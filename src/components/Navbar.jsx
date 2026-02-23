@@ -6,12 +6,37 @@ import { supabase } from '../lib/supabase'
 const Navbar = () => {
     const { user, signOut } = useAuth()
     const [profile, setProfile] = useState(null)
+    const [unreadCount, setUnreadCount] = useState(0)
     const navigate = useNavigate()
 
+
     useEffect(() => {
-        if (user) fetchProfile()
-        else setProfile(null)
+        if (user) {
+            fetchProfile()
+            fetchUnreadCount()
+
+            // Real-time unread listener
+            const channel = supabase
+                .channel('navbar_notifications')
+                .on('postgres_changes', {
+                    event: '*', // Listen for inserts (new messages) and updates (marking as read)
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `receiver_id=eq.${user.id}`
+                }, () => {
+                    fetchUnreadCount()
+                })
+                .subscribe()
+
+            return () => {
+                supabase.removeChannel(channel)
+            }
+        } else {
+            setProfile(null)
+            setUnreadCount(0)
+        }
     }, [user])
+
 
     const fetchProfile = async () => {
         const { data } = await supabase
@@ -21,6 +46,17 @@ const Navbar = () => {
             .single()
         if (data) setProfile(data)
     }
+
+    const fetchUnreadCount = async () => {
+        const { count, error } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('receiver_id', user.id)
+            .eq('is_read', false)
+
+        if (!error) setUnreadCount(count || 0)
+    }
+
 
     const handleLogout = async () => {
         await signOut()
@@ -44,12 +80,34 @@ const Navbar = () => {
                             <Link to="/videos" className="nav-link">VIDEOS</Link>
                             <Link to="/create" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.7rem' }}>+ POST</Link>
 
-                            <Link to="/messages" className="nav-link" title="INBOX" style={{ display: 'flex', alignItems: 'center' }}>
+                            <Link to="/messages" className="nav-link" title="INBOX" style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                                     <path d="M8 9a2 2 0 0 0 2 2h8l4 4V7a2 2 0 0 0-2-2h-10a2 2 0 0 0-2 2z"></path>
                                 </svg>
+                                {unreadCount > 0 && (
+                                    <span style={{
+                                        position: 'absolute',
+                                        top: '-5px',
+                                        right: '-5px',
+                                        background: 'var(--primary)',
+                                        color: 'white',
+                                        fontSize: '0.6rem',
+                                        fontWeight: 900,
+                                        width: '18px',
+                                        height: '18px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: '50%',
+                                        border: '2px solid var(--bg)',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }}>
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
                             </Link>
+
                             <Link to="/profile" className="profile-icon" title="SECURE PROFILE">
 
                                 {profile?.avatar_url ? (

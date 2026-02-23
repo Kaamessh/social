@@ -106,13 +106,16 @@ const Messages = () => {
                                 </div>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontWeight: 900, fontSize: '0.9rem' }}>{conv.user?.username.toUpperCase()}</span>
+                                        <span style={{ fontWeight: 900, fontSize: '0.9rem' }}>
+                                            {conv.user?.username ? conv.user.username.toUpperCase() : `USER_${conv.userId.substring(0, 5).toUpperCase()}`}
+                                        </span>
                                         <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{new Date(conv.lastMessage.created_at).toLocaleTimeString()}</span>
                                     </div>
                                     <p style={{ margin: '5px 0 0', fontSize: '0.8rem', opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         {conv.lastMessage.content}
                                     </p>
                                 </div>
+
                                 {conv.unreadCount > 0 && (
                                     <div style={{ background: 'var(--primary)', color: 'white', fontSize: '0.6rem', padding: '2px 8px', fontWeight: 900 }}>
                                         NEW

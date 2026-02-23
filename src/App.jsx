@@ -6,8 +6,11 @@ import Navbar from './components/Navbar'
 import Feed from './pages/Feed'
 import CreatePost from './pages/CreatePost'
 import Profile from './pages/Profile'
+import Messages from './pages/Messages'
+import Chat from './pages/Chat'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+
 
 function App() {
   return (
@@ -20,6 +23,9 @@ function App() {
             <Route path="/photos" element={<ProtectedRoute><Feed type="photos" /></ProtectedRoute>} />
             <Route path="/videos" element={<ProtectedRoute><Feed type="videos" /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/chat/:receiverId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+
 
 
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

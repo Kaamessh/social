@@ -43,7 +43,9 @@ const Navbar = () => {
                             <Link to="/videos" className="nav-link">VIDEOS</Link>
                             <Link to="/create" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.7rem' }}>+ POST</Link>
 
+                            <Link to="/messages" className="nav-link" title="INBOX">MESSAGES</Link>
                             <Link to="/profile" className="profile-icon" title="SECURE PROFILE">
+
                                 {profile?.avatar_url ? (
                                     <img src={profile.avatar_url} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                 ) : (

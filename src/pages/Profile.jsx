@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
+
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import PostCard from '../components/PostCard'
@@ -214,12 +215,21 @@ const Profile = () => {
 
                 <h1 className="profile-name" style={{ marginTop: '1rem', fontSize: '2.5rem' }}>{profile?.username.toUpperCase()}</h1>
 
-                {isOwnProfile && (
+                {isOwnProfile ? (
                     <label className="btn btn-primary" style={{ display: 'inline-block', marginTop: '1rem', fontSize: '0.6rem', padding: '0.4rem 1rem' }}>
                         {uploading ? 'UPLOADING...' : 'CHANGE PHOTO'}
                         <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
                     </label>
+                ) : (
+                    <Link
+                        to={`/chat/${targetUserId}`}
+                        className="btn btn-primary"
+                        style={{ display: 'inline-block', marginTop: '1rem', fontSize: '0.6rem', padding: '0.4rem 1rem', textDecoration: 'none' }}
+                    >
+                        📩 SEND MESSAGE
+                    </Link>
                 )}
+
             </div>
 
             <div style={{ marginTop: '4rem' }}>

@@ -85,7 +85,7 @@ const Messages = () => {
                 {conversations.length > 0 ? (
                     conversations.map(conv => (
                         <Link
-                            to={`/chat/${conv.lastMessage.sender_id === user.id ? conv.lastMessage.receiver_id : conv.lastMessage.sender_id}`}
+                            to={`/profile/${conv.lastMessage.sender_id === user.id ? conv.lastMessage.receiver_id : conv.lastMessage.sender_id}?view=messaging`}
                             key={conv.lastMessage.id}
                             style={{ textDecoration: 'none', color: 'inherit' }}
                         >

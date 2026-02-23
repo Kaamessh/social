@@ -48,22 +48,25 @@ const Messages = () => {
 
             if (error) throw error
 
-            // Group by the "other" user
+            // Group by the "other" user ID
             const groups = {}
             data.forEach(msg => {
-                const otherUser = msg.sender_id === user.id ? msg.receiver : msg.sender
-                const otherUserId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id
+                const isIReceived = msg.receiver_id === user.id
+                const otherUserId = isIReceived ? msg.sender_id : msg.receiver_id
+                const otherUser = isIReceived ? msg.sender : msg.receiver
 
                 if (!groups[otherUserId]) {
                     groups[otherUserId] = {
+                        userId: otherUserId,
                         user: otherUser,
                         lastMessage: msg,
-                        unreadCount: (!msg.is_read && msg.receiver_id === user.id) ? 1 : 0
+                        unreadCount: (!msg.is_read && isIReceived) ? 1 : 0
                     }
-                } else if (!msg.is_read && msg.receiver_id === user.id) {
+                } else if (!msg.is_read && isIReceived) {
                     groups[otherUserId].unreadCount++
                 }
             })
+
 
             setConversations(Object.values(groups))
         } catch (err) {

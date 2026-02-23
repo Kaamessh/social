@@ -1,116 +1,44 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import PostCard from '../components/PostCard'
 
 const Profile = () => {
     const { user } = useAuth()
     const [profile, setProfile] = useState(null)
+    const [posts, setPosts] = useState([])
     const [loading, setLoading] = useState(true)
     const [uploading, setUploading] = useState(false)
 
-    // Settings States
-    const [showSettings, setShowSettings] = useState(false)
-    const [newUsername, setNewUsername] = useState('')
-    const [newPhone, setNewPhone] = useState('')
-    const [newEmail, setNewEmail] = useState('')
+    // View States: 'profile', 'account', 'edit-username', 'edit-phone', 'edit-email'
+    const [view, setView] = useState('profile')
+
+    // Form States
+    const [tempValue, setTempValue] = useState('')
     const [usernameError, setUsernameError] = useState('')
     const [checkingUsername, setCheckingUsername] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
-        if (user) fetchProfile()
+        if (user) {
+            fetchProfile()
+            fetchMyPosts()
+        }
     }, [user])
 
     const fetchProfile = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single()
-
-            if (data) {
-                setProfile(data)
-                setNewUsername(data.username)
-                setNewPhone(data.phone_number || '')
-                setNewEmail(user.email)
-            }
-        } catch (err) {
-            console.error(err)
-        } finally {
-            setLoading(false)
-        }
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+        if (data) setProfile(data)
     }
 
-    // Real-time username check for Settings
-    useEffect(() => {
-        if (!showSettings || newUsername === profile?.username) {
-            setUsernameError('')
-            return
-        }
-
-        const checkAvailability = async () => {
-            if (newUsername.length < 3) {
-                setUsernameError('')
-                return
-            }
-
-            setCheckingUsername(true)
-            setUsernameError('')
-
-            try {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('username')
-                    .ilike('username', newUsername)
-                    .single()
-
-                if (data) {
-                    setUsernameError('username was not available')
-                }
-            } catch (err) {
-                // Not found = available
-            } finally {
-                setCheckingUsername(false)
-            }
-        }
-
-        const timeoutId = setTimeout(checkAvailability, 500)
-        return () => clearTimeout(timeoutId)
-    }, [newUsername, showSettings, profile])
-
-    const handleUpdateSettings = async (e) => {
-        e.preventDefault()
-        if (usernameError || checkingUsername) return
-        setIsSaving(true)
-
-        try {
-            // 1. Update Profile (Username/Phone)
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .update({
-                    username: newUsername,
-                    phone_number: newPhone
-                })
-                .eq('id', user.id)
-
-            if (profileError) throw profileError
-
-            // 2. Update Auth Email if changed
-            if (newEmail !== user.email) {
-                const { error: authError } = await supabase.auth.updateUser({ email: newEmail })
-                if (authError) throw authError
-                alert('CONFIRMATION EMAIL SENT TO NEW ADDRESS')
-            }
-
-            setProfile({ ...profile, username: newUsername, phone_number: newPhone })
-            setShowSettings(false)
-            alert('IDENTITY SETTINGS UPDATED SECURELY')
-        } catch (err) {
-            alert('UPDATE FAIL: ' + err.message)
-        } finally {
-            setIsSaving(false)
-        }
+    const fetchMyPosts = async () => {
+        const { data } = await supabase
+            .from('posts')
+            .select('*, profiles:user_id(username, avatar_url)')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+        if (data) setPosts(data)
+        setLoading(false)
     }
 
     const handleAvatarUpload = async (e) => {
@@ -118,29 +46,16 @@ const Profile = () => {
             if (!e.target.files || e.target.files.length === 0) return
             setUploading(true)
             const file = e.target.files[0]
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${user.id}.${fileExt}`
-            const filePath = `avatars/${fileName}`
+            const filePath = `avatars/${user.id}.${file.name.split('.').pop()}`
 
-            const { error: uploadError } = await supabase.storage
-                .from('posts')
-                .upload(filePath, file, { upsert: true })
-
+            const { error: uploadError } = await supabase.storage.from('posts').upload(filePath, file, { upsert: true })
             if (uploadError) throw uploadError
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('posts')
-                .getPublicUrl(filePath)
-
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ avatar_url: publicUrl })
-                .eq('id', user.id)
-
-            if (updateError) throw updateError
+            const { data: { publicUrl } } = supabase.storage.from('posts').getPublicUrl(filePath)
+            await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
 
             setProfile({ ...profile, avatar_url: publicUrl })
-            alert('IDENTITY PHOTO UPDATED SECURELY')
+            alert('IDENTITY PHOTO UPDATED')
         } catch (err) {
             alert('UPLOAD FAIL: ' + err.message)
         } finally {
@@ -148,126 +63,204 @@ const Profile = () => {
         }
     }
 
-    if (loading) return <div className="container">LOADING SECURE DATA...</div>
+    const handleDeleteSuccess = (postId) => {
+        setPosts(posts.filter(p => p.id !== postId))
+    }
 
-    return (
-        <div className="container">
-            <div className="profile-hero">
-                <div style={{ marginBottom: '2rem' }}>
-                    <div style={{
-                        width: '120px',
-                        height: '120px',
-                        margin: '0 auto',
-                        background: 'var(--border)',
-                        border: '2px solid var(--primary)',
-                        overflow: 'hidden',
-                        position: 'relative'
-                    }}>
-                        {profile?.avatar_url ? (
-                            <img src={profile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Avatar" />
-                        ) : (
-                            <div style={{ padding: '2rem', fontSize: '2rem' }}>👤</div>
-                        )}
-                        {uploading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem' }}>SYNCING...</div>}
+    // Real-time username check logic
+    useEffect(() => {
+        if (view !== 'edit-username' || tempValue === profile?.username) {
+            setUsernameError('')
+            return
+        }
+        const check = async () => {
+            if (tempValue.length < 3) return setUsernameError('')
+            setCheckingUsername(true)
+            const { data } = await supabase.from('profiles').select('username').ilike('username', tempValue).single()
+            setUsernameError(data ? 'username not available' : '')
+            setCheckingUsername(false)
+        }
+        const timer = setTimeout(check, 500)
+        return () => clearTimeout(timer)
+    }, [tempValue, view, profile])
+
+    const saveIdentity = async (field, value) => {
+        if (usernameError || checkingUsername) return
+        setIsSaving(true)
+        try {
+            if (field === 'email') {
+                const { error } = await supabase.auth.updateUser({ email: value })
+                if (error) throw error
+                alert('VERIFICATION EMAIL SENT')
+            } else {
+                const update = field === 'username' ? { username: value } : { phone_number: value }
+                const { error } = await supabase.from('profiles').update(update).eq('id', user.id)
+                if (error) throw error
+                setProfile({ ...profile, ...update })
+                alert('IDENTITY UPDATED')
+            }
+            setView('account')
+        } catch (err) {
+            alert('FAIL: ' + err.message)
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    if (loading) return <div className="container" style={{ textAlign: 'center', padding: '10rem 0' }}>INITIALIZING SECURE LINK...</div>
+
+    // Sub-view: Edit Identity
+    if (view.startsWith('edit-')) {
+        const type = view.split('-')[1]
+        return (
+            <div className="container" style={{ maxWidth: '400px', marginTop: '4rem' }}>
+                <button onClick={() => setView('account')} className="nav-link" style={{ marginBottom: '2rem', background: 'none', border: 'none', cursor: 'pointer' }}>← BACK TO ACCOUNT</button>
+                <div className="card">
+                    <h2 style={{ fontSize: '1rem', fontWeight: 900, textTransform: 'uppercase' }}>UPDATE {type}</h2>
+                    <div className="form-group" style={{ marginTop: '2rem' }}>
+                        <label className="form-label">NEW {type}</label>
+                        <input
+                            type={type === 'email' ? 'email' : type === 'phone' ? 'tel' : 'text'}
+                            value={tempValue}
+                            onChange={(e) => setTempValue(e.target.value)}
+                            style={{ borderColor: usernameError ? 'var(--primary)' : '' }}
+                        />
+                        {checkingUsername && <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>VERIFYING...</p>}
+                        {usernameError && <p style={{ fontSize: '0.6rem', color: 'var(--primary)', fontWeight: 800 }}>{usernameError.toUpperCase()}</p>}
                     </div>
-                    <label className="btn btn-outline" style={{ display: 'inline-block', marginTop: '1rem', fontSize: '0.7rem', padding: '0.5rem 1rem' }}>
-                        {uploading ? 'WAIT...' : 'UPDATE PHOTO'}
-                        <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
-                    </label>
-                </div>
-
-                <div className="profile-name">{profile?.username || 'USER'}</div>
-
-                <div style={{ marginTop: '2rem' }}>
                     <button
-                        onClick={() => setShowSettings(!showSettings)}
+                        onClick={() => saveIdentity(type, tempValue)}
                         className="btn btn-primary"
-                        style={{ fontSize: '0.7rem', padding: '0.5rem 1.5rem' }}
+                        style={{ width: '100%' }}
+                        disabled={isSaving || (type === 'username' && (!!usernameError || checkingUsername))}
                     >
-                        {showSettings ? 'EXIT SETTINGS' : 'IDENTITY SETTINGS'}
+                        {isSaving ? 'SECURING...' : 'CONFIRM CHANGE'}
                     </button>
-                    {!showSettings && (
-                        <button
-                            onClick={async () => {
-                                await supabase.auth.signOut()
-                                window.location.href = '/login'
-                            }}
-                            className="btn btn-outline"
-                            style={{ fontSize: '0.7rem', padding: '0.5rem 1.5rem', marginLeft: '1rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}
-                        >
-                            LOGOUT
-                        </button>
+                </div>
+            </div>
+        )
+    }
+
+    // Sub-view: Account Control Center
+    if (view === 'account') {
+        return (
+            <div className="container" style={{ maxWidth: '500px', marginTop: '4rem' }}>
+                <button onClick={() => setView('profile')} className="nav-link" style={{ marginBottom: '2rem', background: 'none', border: 'none', cursor: 'pointer' }}>← BACK TO PROFILE</button>
+                <div className="card">
+                    <h2 style={{ fontSize: '1.2rem', fontWeight: 900, marginBottom: '2rem' }}>ACCOUNT CONTROL</h2>
+
+                    <div className="setting-item" onClick={() => { setView('edit-username'); setTempValue(profile.username); }} style={{ borderBottom: '1px solid var(--border)', padding: '1.5rem 0', cursor: 'pointer' }}>
+                        <label className="form-label" style={{ margin: 0 }}>USERNAME</label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                            <span style={{ fontWeight: 600 }}>{profile.username}</span>
+                            <span style={{ color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 800 }}>CHANGE →</span>
+                        </div>
+                    </div>
+
+                    <div className="setting-item" onClick={() => { setView('edit-phone'); setTempValue(profile.phone_number || ''); }} style={{ borderBottom: '1px solid var(--border)', padding: '1.5rem 0', cursor: 'pointer' }}>
+                        <label className="form-label" style={{ margin: 0 }}>PHONE NUMBER</label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                            <span style={{ fontWeight: 600 }}>{profile.phone_number || 'NOT SET'}</span>
+                            <span style={{ color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 800 }}>CHANGE →</span>
+                        </div>
+                    </div>
+
+                    <div className="setting-item" onClick={() => { setView('edit-email'); setTempValue(user.email); }} style={{ borderBottom: '1px solid var(--border)', padding: '1.5rem 0', cursor: 'pointer' }}>
+                        <label className="form-label" style={{ margin: 0 }}>EMAIL ADDRESS</label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                            <span style={{ fontWeight: 600 }}>{user.email}</span>
+                            <span style={{ color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 800 }}>CHANGE →</span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => { supabase.auth.signOut(); window.location.href = '/login'; }}
+                        className="btn btn-outline"
+                        style={{ width: '100%', marginTop: '2rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                    >
+                        LOGOUT FROM HELLOALL
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    // Main Profile View
+    return (
+        <div className="container" style={{ position: 'relative' }}>
+            <div className="profile-hero" style={{ border: 'none', background: 'none' }}>
+                <div style={{
+                    width: '130px',
+                    height: '130px',
+                    margin: '0 auto',
+                    background: 'var(--surface)',
+                    border: '3px solid var(--primary)',
+                    overflow: 'hidden',
+                    position: 'relative'
+                }}>
+                    {profile?.avatar_url ? (
+                        <img src={profile.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Avatar" />
+                    ) : (
+                        <div style={{ padding: '2.5rem', fontSize: '2.5rem' }}>👤</div>
                     )}
+                    {uploading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem' }}>SYNCING...</div>}
                 </div>
 
-                {showSettings ? (
-                    <div className="card" style={{ marginTop: '2rem', textAlign: 'left', border: '1px solid var(--border)' }}>
-                        <form onSubmit={handleUpdateSettings}>
-                            <div className="form-group">
-                                <label className="form-label">Change Username</label>
-                                <input
-                                    type="text"
-                                    value={newUsername}
-                                    onChange={(e) => setNewUsername(e.target.value.trim())}
-                                    required
-                                    style={{ borderColor: usernameError ? 'var(--primary)' : '' }}
-                                />
-                                {checkingUsername && <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>Security Check...</p>}
-                                {usernameError && <p style={{ fontSize: '0.6rem', color: 'var(--primary)', fontWeight: 800 }}>{usernameError.toUpperCase()}</p>}
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Update Phone Number</label>
-                                <input
-                                    type="tel"
-                                    value={newPhone}
-                                    onChange={(e) => setNewPhone(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Update Email Address</label>
-                                <input
-                                    type="email"
-                                    value={newEmail}
-                                    onChange={(e) => setNewEmail(e.target.value)}
-                                    required
-                                />
-                                <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '4px' }}>*Email updates require verification login</p>
-                            </div>
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                style={{ width: '100%' }}
-                                disabled={isSaving || checkingUsername || !!usernameError}
-                            >
-                                {isSaving ? 'SECURING...' : 'SAVE SETTINGS'}
-                            </button>
-                        </form>
+                <h1 className="profile-name" style={{ marginTop: '1rem', fontSize: '2.5rem' }}>{profile?.username.toUpperCase()}</h1>
+
+                <label className="btn btn-primary" style={{ display: 'inline-block', marginTop: '1rem', fontSize: '0.6rem', padding: '0.4rem 1rem' }}>
+                    {uploading ? 'UPLOADING...' : 'CHANGE PHOTO'}
+                    <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                </label>
+            </div>
+
+            <div style={{ marginTop: '4rem' }}>
+                <h2 className="feed-title" style={{ fontSize: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>YOUR STORIES</h2>
+                {posts.length > 0 ? (
+                    <div style={{ marginTop: '2rem' }}>
+                        {posts.map(post => (
+                            <PostCard
+                                key={post.id}
+                                post={post}
+                                user={user}
+                                onDeleteSuccess={handleDeleteSuccess}
+                            />
+                        ))}
                     </div>
                 ) : (
-                    <div className="profile-info-grid">
-                        <div className="info-item">
-                            <label>Verified Email</label>
-                            <p>{user.email}</p>
-                        </div>
-                        <div className="info-item">
-                            <label>Phone Identity</label>
-                            <p>{profile?.phone_number || 'NOT SET'}</p>
-                        </div>
-                        <div className="info-item">
-                            <label>User ID</label>
-                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{user.id}</p>
-                        </div>
-                        <div className="info-item">
-                            <label>Account Status</label>
-                            <p style={{ color: 'var(--primary)', fontWeight: 800 }}>ACTIVE / SECURE</p>
-                        </div>
+                    <div style={{ padding: '6rem 0', textAlign: 'center', opacity: 0.5 }}>
+                        <p>NO SECURE BROADCASTS FOUND</p>
                     </div>
                 )}
             </div>
 
-            <h2 className="feed-title" style={{ fontSize: '1rem', marginBottom: '2rem' }}>DATA FOOTPRINT</h2>
-            <p style={{ color: 'var(--text-muted)' }}>All your shared media and interactions are encrypted and stored in the Helloall network.</p>
+            {/* Floating Account Button */}
+            <button
+                onClick={() => setView('account')}
+                style={{
+                    position: 'fixed',
+                    bottom: '2rem',
+                    right: '2rem',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '0',
+                    background: 'var(--primary)',
+                    color: 'white',
+                    border: 'none',
+                    fontWeight: 900,
+                    fontSize: '0.4rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 10px 30px rgba(255, 30, 30, 0.4)',
+                    zIndex: 1001,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}
+            >
+                <span style={{ fontSize: '1.2rem' }}>⚙️</span>
+                ACCOUNT
+            </button>
         </div>
     )
 }

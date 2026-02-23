@@ -6,7 +6,6 @@ import Navbar from './components/Navbar'
 import Feed from './pages/Feed'
 import CreatePost from './pages/CreatePost'
 import Profile from './pages/Profile'
-import MyPosts from './pages/MyPosts'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 
@@ -20,8 +19,8 @@ function App() {
             <Route path="/" element={<ProtectedRoute><Feed type="all" /></ProtectedRoute>} />
             <Route path="/photos" element={<ProtectedRoute><Feed type="photos" /></ProtectedRoute>} />
             <Route path="/videos" element={<ProtectedRoute><Feed type="videos" /></ProtectedRoute>} />
-            <Route path="/my-posts" element={<ProtectedRoute><MyPosts /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+
 
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />

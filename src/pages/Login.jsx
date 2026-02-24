@@ -15,6 +15,9 @@ const Login = () => {
         setLoading(true)
         setError('')
         try {
+            if (!signIn) {
+                throw new Error('SYSTEM ERROR: Secure channel uninitialized. Check Vercel Env Vars.')
+            }
             const { error } = await signIn(email, password)
             if (error) throw error
             navigate('/')
@@ -24,6 +27,7 @@ const Login = () => {
             setLoading(false)
         }
     }
+
 
     return (
         <div className="container">

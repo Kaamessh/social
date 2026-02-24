@@ -76,11 +76,18 @@ export const AuthProvider = ({ children }) => {
                 setProbeResult('PROBING...')
                 try {
                     const sanitizedUrl = import.meta.env.VITE_SUPABASE_URL.trim().replace(/\/$/, '')
-                    const res = await fetch(sanitizedUrl, { method: 'GET', mode: 'no-cors' })
+
+                    // Add a timeout to the probe itself
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                    await fetch(sanitizedUrl, { method: 'GET', mode: 'no-cors', signal: controller.signal })
+                    clearTimeout(timeoutId);
                     setProbeResult('REACHABLE (200-ish)')
                 } catch (e) {
-                    setProbeResult('UNREACHABLE: ' + e.message)
+                    setProbeResult('UNREACHABLE: ' + (e.name === 'AbortError' ? 'Probe Timeout (Server Not Responding)' : e.message))
                 }
+
             }
             probe()
         }

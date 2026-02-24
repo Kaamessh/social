@@ -103,7 +103,7 @@ const Navbar = () => {
                                         border: '2px solid var(--bg)',
                                         boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                                     }}>
-                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                        {(unreadCount || 0) > 9 ? '9+' : (unreadCount || 0)}
                                     </span>
                                 )}
                             </Link>

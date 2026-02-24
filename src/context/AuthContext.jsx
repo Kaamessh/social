@@ -26,14 +26,23 @@ export const AuthProvider = ({ children }) => {
 
         getSession()
 
+        // Safety timeout to prevent permanent white screen
+        const loadingTimeout = setTimeout(() => {
+            setLoading(false)
+        }, 5000)
+
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {
                 setUser(session?.user ?? null)
                 setLoading(false)
+                clearTimeout(loadingTimeout)
             }
         )
 
-        return () => subscription.unsubscribe()
+        return () => {
+            subscription.unsubscribe()
+            clearTimeout(loadingTimeout)
+        }
     }, [])
 
 

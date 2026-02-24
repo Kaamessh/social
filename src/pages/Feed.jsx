@@ -109,7 +109,7 @@ const Feed = ({ type = 'all' }) => {
                                             <div style={{ textAlign: 'center', padding: '5px', fontSize: '0.8rem' }}>👤</div>
                                         )}
                                     </div>
-                                    <span style={{ fontWeight: 800 }}>{s.username.toUpperCase()}</span>
+                                    <span style={{ fontWeight: 800 }}>{(s.username || 'USER').toUpperCase()}</span>
                                 </div>
                             ))}
                         </div>
@@ -125,7 +125,7 @@ const Feed = ({ type = 'all' }) => {
                     <PostCard
                         key={post.id}
                         post={post}
-                        user={user}
+                        user={user || {}}
                     />
                 ))
             )}

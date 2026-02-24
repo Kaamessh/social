@@ -193,7 +193,8 @@ export const AuthProvider = ({ children }) => {
                                     <div style={{ background: '#f8f8f8', padding: '1rem', marginTop: '1rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'left', wordBreak: 'break-all', fontSize: '0.7rem' }}>
                                         <p style={{ marginBottom: '0.5rem' }}><strong>FULL URL:</strong> <code>{urlParam}</code></p>
                                         <p style={{ marginBottom: '0.5rem' }}><strong>FULL KEY:</strong> <code>{keyParam}</code></p>
-                                        <p style={{ marginTop: '1rem', fontWeight: 800, color: 'var(--danger)' }}>💡 HINT: Compare these EXACT strings with your Supabase Settings -> API Dashboard.</p>
+                                        <p style={{ marginTop: '1rem', fontWeight: 800, color: 'var(--danger)' }}>💡 HINT: Compare these EXACT strings with your Supabase Settings → API Dashboard.</p>
+
                                     </div>
                                 )}
                             </div>

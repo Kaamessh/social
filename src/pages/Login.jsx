@@ -22,11 +22,8 @@ const Login = () => {
             if (error) throw error
             navigate('/')
         } catch (err) {
-            if (err.message.includes('fetch')) {
-                setError('NETWORK ERROR: Cannot reach Supabase. Please verify your VITE_SUPABASE_URL and Internet connection.')
-            } else {
-                setError(err.message)
-            }
+            console.error('Login Failure Detail:', err)
+            setError(`CONNECTION FAILED: ${err.message}. If you see "Failed to fetch", go to Supabase -> URL Configuration and add your Vercel URL.`)
         } finally {
             setLoading(false)
         }

@@ -73,25 +73,34 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         if (initError && supabase) {
             const probe = async () => {
-                setProbeResult('PROBING...')
+                setProbeResult('PROBING FULL STACK...')
                 try {
                     const sanitizedUrl = import.meta.env.VITE_SUPABASE_URL.trim().replace(/\/$/, '')
 
-                    // Add a timeout to the probe itself
+                    // Test 1: Simple Reachability
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                    await fetch(sanitizedUrl, { method: 'GET', mode: 'no-cors', signal: controller.signal })
+                    const res = await fetch(`${sanitizedUrl}/rest/v1/?apikey=${import.meta.env.VITE_SUPABASE_ANON_KEY}`, {
+                        method: 'GET',
+                        signal: controller.signal
+                    })
                     clearTimeout(timeoutId);
-                    setProbeResult('REACHABLE (200-ish)')
-                } catch (e) {
-                    setProbeResult('UNREACHABLE: ' + (e.name === 'AbortError' ? 'Probe Timeout (Server Not Responding)' : e.message))
-                }
 
+                    if (res.ok) {
+                        setProbeResult('CONNECTED (200 OK)')
+                    } else {
+                        setProbeResult(`BLOCKED: ${res.status} (${res.statusText})`)
+                    }
+                } catch (e) {
+                    const isTimeout = e.name === 'AbortError';
+                    setProbeResult(isTimeout ? 'TIMEOUT: Server ignoring us' : `FAILED: ${e.message}`);
+                }
             }
             probe()
         }
     }, [initError])
+
 
 
 

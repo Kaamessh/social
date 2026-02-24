@@ -8,6 +8,9 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true)
     const [status, setStatus] = useState('INITIALIZING SECURE CHANNEL...')
     const [initError, setInitError] = useState(null)
+    const [showDebug, setShowDebug] = useState(false)
+    const [probeResult, setProbeResult] = useState('PENDING')
+
 
 
     useEffect(() => {
@@ -66,6 +69,23 @@ export const AuthProvider = ({ children }) => {
             clearTimeout(loadingTimeout)
         }
     }, [])
+
+    useEffect(() => {
+        if (initError && supabase) {
+            const probe = async () => {
+                setProbeResult('PROBING...')
+                try {
+                    const sanitizedUrl = import.meta.env.VITE_SUPABASE_URL.trim().replace(/\/$/, '')
+                    const res = await fetch(sanitizedUrl, { method: 'GET', mode: 'no-cors' })
+                    setProbeResult('REACHABLE (200-ish)')
+                } catch (e) {
+                    setProbeResult('UNREACHABLE: ' + e.message)
+                }
+            }
+            probe()
+        }
+    }, [initError])
+
 
 
 
@@ -155,10 +175,33 @@ export const AuthProvider = ({ children }) => {
                             >
                                 RETRY CONNECTION
                             </button>
+
+                            <div style={{ marginTop: '2rem', borderTop: '1px dashed #ccc', paddingTop: '1.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>REACHABILITY PROBE:</span>
+                                    <span style={{ fontSize: '0.75rem', color: probeResult.includes('REACHABLE') ? 'green' : 'var(--danger)', fontWeight: 900 }}>{probeResult}</span>
+                                </div>
+
+                                <button
+                                    onClick={() => setShowDebug(!showDebug)}
+                                    style={{ background: 'none', border: 'none', color: '#666', fontSize: '0.7rem', textDecoration: 'underline', cursor: 'pointer', marginTop: '1rem', padding: 0 }}
+                                >
+                                    {showDebug ? 'HIDE' : 'SHOW'} FULL DEBUG INFO (USE CAUTION)
+                                </button>
+
+                                {showDebug && (
+                                    <div style={{ background: '#f8f8f8', padding: '1rem', marginTop: '1rem', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'left', wordBreak: 'break-all', fontSize: '0.7rem' }}>
+                                        <p style={{ marginBottom: '0.5rem' }}><strong>FULL URL:</strong> <code>{urlParam}</code></p>
+                                        <p style={{ marginBottom: '0.5rem' }}><strong>FULL KEY:</strong> <code>{keyParam}</code></p>
+                                        <p style={{ marginTop: '1rem', fontWeight: 800, color: 'var(--danger)' }}>💡 HINT: Compare these EXACT strings with your Supabase Settings -> API Dashboard.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div style={{ marginTop: '2rem', fontSize: '0.6rem', opacity: 0.5 }}>HELLOALL SECURE ARCHITECTURE - DETECTED URL: {mask(urlParam)}</div>
                 </div>
+
             ) : loading ? (
                 <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh' }}>
                     <div style={{ color: 'var(--primary)', fontWeight: 900, letterSpacing: '2px', fontSize: '0.8rem' }}>

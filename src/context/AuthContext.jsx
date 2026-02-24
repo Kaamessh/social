@@ -78,12 +78,25 @@ export const AuthProvider = ({ children }) => {
 
     // Immediate check for missing Supabase to prevent blank screen
     if (!supabase) {
+        const urlParam = import.meta.env.VITE_SUPABASE_URL;
+        const keyParam = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const isUrlMissing = !urlParam || urlParam.includes('your_');
+        const isKeyMissing = !keyParam || keyParam.includes('your_');
+        const isUrlMalformed = urlParam && !urlParam.startsWith('http');
+
         return (
             <div className="container" style={{ textAlign: 'center', marginTop: '5rem' }}>
                 <div className="card" style={{ border: '4px solid var(--danger)', padding: '3rem' }}>
                     <h1 style={{ color: 'var(--danger)', fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem' }}>CONFIGURATION REQUIRED</h1>
                     <div style={{ background: '#fffafa', padding: '1.5rem', border: '1px solid var(--danger)', textAlign: 'left' }}>
                         <p style={{ fontWeight: 800, color: 'var(--danger)', marginBottom: '1rem' }}>⚠️ DEPLOYMENT ERROR: Supabase Keys Not Detected</p>
+
+                        <div style={{ fontSize: '0.85rem', marginBottom: '1rem', color: '#666' }}>
+                            {isUrlMissing && <p>❌ <strong>VITE_SUPABASE_URL</strong> is missing or is still a placeholder.</p>}
+                            {isKeyMissing && <p>❌ <strong>VITE_SUPABASE_ANON_KEY</strong> is missing or is still a placeholder.</p>}
+                            {isUrlMalformed && <p>❌ <strong>VITE_SUPABASE_URL</strong> is malformed (must start with <code>https://</code>).</p>}
+                        </div>
+
                         <p style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
                             Your application is unable to connect to the backend. If you are on <strong>Vercel</strong>, please ensure:
                         </p>

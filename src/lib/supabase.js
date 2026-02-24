@@ -18,14 +18,19 @@ if (!supabaseUrl || !supabaseAnonKey || isPlaceHolder(supabaseUrl) || !supabaseU
   }
 } else {
   try {
-    // Sanitize the URL: remove trailing slashes and trim whitespace
     const sanitizedUrl = supabaseUrl.trim().replace(/\/$/, '')
     const sanitizedKey = supabaseAnonKey.trim()
+
+    // Masked logging for user verification in console
+    const maskedUrl = sanitizedUrl.replace(/^(https?:\/\/).{1}(.*).{1}(\.[a-z]{2,})$/, '$1$2...$3');
+    console.log('INITIATING SECURE CHANNEL TO:', sanitizedUrl.substring(0, 10) + '...' + sanitizedUrl.slice(-5));
+
     supabaseClient = createClient(sanitizedUrl, sanitizedKey)
   } catch (err) {
     console.error('Failed to initialize Supabase client:', err)
   }
 }
+
 
 
 

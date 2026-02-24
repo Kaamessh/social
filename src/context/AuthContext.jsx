@@ -88,7 +88,10 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Immediate check for missing Supabase to prevent blank screen
+    const mask = (str) => str ? str.slice(0, 12) + '...' + str.slice(-4) : 'MISSING';
+
     if (!supabase) {
+
         const urlParam = import.meta.env.VITE_SUPABASE_URL;
         const keyParam = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const isUrlMissing = !urlParam || urlParam.includes('your_');
@@ -104,9 +107,12 @@ export const AuthProvider = ({ children }) => {
 
                         <div style={{ fontSize: '0.85rem', marginBottom: '1rem', color: '#666' }}>
                             {isUrlMissing && <p>❌ <strong>VITE_SUPABASE_URL</strong> is missing or is still a placeholder.</p>}
-                            {isKeyMissing && <p>❌ <strong>VITE_SUPABASE_ANON_KEY</strong> is missing or is still a placeholder.</p>}
+                            {!isUrlMissing && <p>✅ <strong>URL DETECTED:</strong> <code>{mask(urlParam)}</code></p>}
+                            {isKeyMissing && <p>❌ <strong>VITE_SUPABASE_ANON_KEY</strong> is missing.</p>}
+                            {!isKeyMissing && <p>✅ <strong>KEY DETECTED:</strong> <code>{mask(keyParam)}</code></p>}
                             {isUrlMalformed && <p>❌ <strong>VITE_SUPABASE_URL</strong> is malformed (must start with <code>https://</code>).</p>}
                         </div>
+
 
                         <p style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
                             Your application is unable to connect to the backend. If you are on <strong>Vercel</strong>, please ensure:

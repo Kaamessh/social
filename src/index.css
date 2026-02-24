@@ -9,9 +9,11 @@
   --text: #000000;
   --text-muted: #555555;
   --border: #dddddd;
+  --danger: #ff1e1e;
   --radius: 0px;
   /* Sharp, corporate look */
 }
+
 
 
 body {

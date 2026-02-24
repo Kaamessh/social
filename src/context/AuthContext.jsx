@@ -6,6 +6,9 @@ const AuthContext = createContext({})
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [status, setStatus] = useState('INITIALIZING SECURE CHANNEL...')
+    const [initError, setInitError] = useState(null)
+
 
     useEffect(() => {
         if (!supabase) {
@@ -15,10 +18,13 @@ export const AuthProvider = ({ children }) => {
 
         const getSession = async () => {
             try {
+                setStatus('NEGOTIATING SESSION...')
                 const { data: { session } } = await supabase.auth.getSession()
                 setUser(session?.user ?? null)
+                setStatus('CONNECTION ESTABLISHED')
             } catch (err) {
                 console.error('Error getting session:', err)
+                setInitError(err.message)
             } finally {
                 setLoading(false)
             }
@@ -28,13 +34,17 @@ export const AuthProvider = ({ children }) => {
 
         // Safety timeout to prevent permanent white screen
         const loadingTimeout = setTimeout(() => {
-            setLoading(false)
-        }, 5000)
+            if (loading) {
+                setStatus('TIMEOUT: PROCEEDING WITH CAUTION...')
+                setLoading(false)
+            }
+        }, 8000)
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {
                 setUser(session?.user ?? null)
                 setLoading(false)
+                setStatus('AUTH STATE UPDATED')
                 clearTimeout(loadingTimeout)
             }
         )
@@ -44,6 +54,7 @@ export const AuthProvider = ({ children }) => {
             clearTimeout(loadingTimeout)
         }
     }, [])
+
 
 
     const signUp = (email, password, metadata) => supabase?.auth.signUp({
@@ -85,9 +96,18 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {loading ? (
+                <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh' }}>
+                    <div style={{ color: 'var(--primary)', fontWeight: 900, letterSpacing: '2px', fontSize: '0.8rem' }}>
+                        {status}
+                    </div>
+                    {initError && <div style={{ color: 'var(--danger)', marginTop: '1rem' }}>ERROR: {initError}</div>}
+                    <div style={{ marginTop: '2rem', fontSize: '0.6rem', opacity: 0.5 }}>HELLOALL SECURE ARCHITECTURE</div>
+                </div>
+            ) : children}
         </AuthContext.Provider>
     )
+
 }
 
 export const useAuth = () => useContext(AuthContext)

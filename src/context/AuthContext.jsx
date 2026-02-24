@@ -19,16 +19,27 @@ export const AuthProvider = ({ children }) => {
         const getSession = async () => {
             try {
                 setStatus('NEGOTIATING SESSION...')
-                const { data: { session } } = await supabase.auth.getSession()
+
+                // Add a specific timeout for the session fetch itself
+                const sessionPromise = supabase.auth.getSession()
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('NETWORK TIMEOUT: Secure channel negotiation failed.')), 6000)
+                )
+
+                const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
+
                 setUser(session?.user ?? null)
                 setStatus('CONNECTION ESTABLISHED')
             } catch (err) {
                 console.error('Error getting session:', err)
-                setInitError(err.message)
+                setInitError(err.message + ' (Check Vercel Env Vars)')
+                // If negotiation fails, we must stop loading to show the error
+                setLoading(false)
             } finally {
                 setLoading(false)
             }
         }
+
 
         getSession()
 

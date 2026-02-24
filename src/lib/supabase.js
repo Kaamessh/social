@@ -18,11 +18,15 @@ if (!supabaseUrl || !supabaseAnonKey || isPlaceHolder(supabaseUrl) || !supabaseU
   }
 } else {
   try {
-    supabaseClient = createClient(supabaseUrl.trim(), supabaseAnonKey.trim())
+    // Sanitize the URL: remove trailing slashes and trim whitespace
+    const sanitizedUrl = supabaseUrl.trim().replace(/\/$/, '')
+    const sanitizedKey = supabaseAnonKey.trim()
+    supabaseClient = createClient(sanitizedUrl, sanitizedKey)
   } catch (err) {
     console.error('Failed to initialize Supabase client:', err)
   }
 }
+
 
 
 export const supabase = supabaseClient

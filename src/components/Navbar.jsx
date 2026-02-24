@@ -39,6 +39,7 @@ const Navbar = () => {
 
 
     const fetchProfile = async () => {
+        if (!supabase) return
         const { data } = await supabase
             .from('profiles')
             .select('avatar_url')
@@ -48,6 +49,7 @@ const Navbar = () => {
     }
 
     const fetchUnreadCount = async () => {
+        if (!supabase) return
         const { count, error } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
@@ -56,6 +58,7 @@ const Navbar = () => {
 
         if (!error) setUnreadCount(count || 0)
     }
+
 
 
     const handleLogout = async () => {

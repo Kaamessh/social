@@ -26,18 +26,20 @@ if (!supabaseUrl || !supabaseAnonKey || isPlaceHolder(supabaseUrl) || !supabaseU
     console.log('INITIATING SECURE CHANNEL TO:', sanitizedUrl.substring(0, 10) + '...' + sanitizedUrl.slice(-5));
 
     // Direct connectivity test to see if the domain is reachable
-    fetch(sanitizedUrl, { method: 'GET', mode: 'no-cors' }).then(r => console.log('SUPABASE DOMAIN REACHABLE:', r.status))
-      .catch(e => console.error('SUPABASE DOMAIN UNREACHABLE (DNS/CORS/OFFLINE):', e.message));
+    fetch(`${sanitizedUrl}/rest/v1/?apikey=${sanitizedKey}`, { method: 'GET' })
+      .then(r => console.log('SUPABASE API STATUS:', r.status))
+      .catch(e => console.error('SUPABASE API ERROR:', e.message));
+
 
     supabaseClient = createClient(sanitizedUrl, sanitizedKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: 'helloall-auth-v1', // Unique key to avoid collisions
-        flowType: 'pkce'
+        storageKey: 'helloall-auth-v1'
       }
     })
+
 
 
   } catch (err) {

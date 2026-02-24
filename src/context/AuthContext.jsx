@@ -171,13 +171,14 @@ export const AuthProvider = ({ children }) => {
                                 Your project URL is active in the dashboard but <strong>refusing all connections</strong>. This is common when a project is stuck in "Waking Up" mode.
                             </p>
                             <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', padding: '1rem', borderRadius: '4px', marginTop: '1rem' }}>
-                                <p style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--danger)' }}>🚨 CRITICAL FIX STEPS:</p>
+                                <p style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--danger)' }}>🚨 FIX PLATFORM TIMEOUT:</p>
                                 <ol style={{ fontSize: '0.8rem', marginTop: '0.5rem', paddingLeft: '1.2rem', lineHeight: '1.8' }}>
-                                    <li><strong>Supabase Dashboard:</strong> Click <strong>"Pause Project"</strong> then <strong>"Restore"</strong> to restart the server.</li>
-                                    <li><strong>Fallback:</strong> Use your other project <strong>"Kaamesh"</strong> if this one stays unreachable.</li>
-                                    <li><strong>Check DNS:</strong> Ensure you don't have a VPN or Firewall blocking <code>supabase.co</code>.</li>
+                                    <li><strong>Supabase Auth Settings:</strong> Ensure <strong>"Site URL"</strong> in the dashboard matches your Vercel URL.</li>
+                                    <li><strong>Redirects:</strong> Add your Vercel domain to <strong>"Additional Redirect URLs"</strong>.</li>
+                                    <li><strong>Restart:</strong> Last resort: Pause and Restore the project to clear the API gateway cache.</li>
                                 </ol>
                             </div>
+
 
                             <button
                                 onClick={() => window.location.reload()}

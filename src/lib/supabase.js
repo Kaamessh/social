@@ -34,9 +34,11 @@ if (!supabaseUrl || !supabaseAnonKey || isPlaceHolder(supabaseUrl) || !supabaseU
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: 'helloall-auth-v1', // Unique key to avoid collisions
         flowType: 'pkce'
       }
     })
+
 
   } catch (err) {
     console.error('Failed to initialize Supabase client:', err)

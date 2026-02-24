@@ -88,15 +88,16 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Immediate check for missing Supabase to prevent blank screen
+    const urlParam = import.meta.env.VITE_SUPABASE_URL;
+    const keyParam = import.meta.env.VITE_SUPABASE_ANON_KEY;
     const mask = (str) => str ? str.slice(0, 12) + '...' + str.slice(-4) : 'MISSING';
 
+    // Immediate check for missing Supabase to prevent blank screen
     if (!supabase) {
-
-        const urlParam = import.meta.env.VITE_SUPABASE_URL;
-        const keyParam = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const isUrlMissing = !urlParam || urlParam.includes('your_');
         const isKeyMissing = !keyParam || keyParam.includes('your_');
         const isUrlMalformed = urlParam && !urlParam.startsWith('http');
+
 
         return (
             <div className="container" style={{ textAlign: 'center', marginTop: '5rem' }}>

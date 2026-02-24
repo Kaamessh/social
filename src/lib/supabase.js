@@ -25,6 +25,10 @@ if (!supabaseUrl || !supabaseAnonKey || isPlaceHolder(supabaseUrl) || !supabaseU
     const maskedUrl = sanitizedUrl.replace(/^(https?:\/\/).{1}(.*).{1}(\.[a-z]{2,})$/, '$1$2...$3');
     console.log('INITIATING SECURE CHANNEL TO:', sanitizedUrl.substring(0, 10) + '...' + sanitizedUrl.slice(-5));
 
+    // Direct connectivity test to see if the domain is reachable
+    fetch(sanitizedUrl).then(r => console.log('SUPABASE DOMAIN REACHABLE:', r.status))
+      .catch(e => console.error('SUPABASE DOMAIN UNREACHABLE (DNS/CORS/OFFLINE):', e.message));
+
     supabaseClient = createClient(sanitizedUrl, sanitizedKey)
   } catch (err) {
     console.error('Failed to initialize Supabase client:', err)

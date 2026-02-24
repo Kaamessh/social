@@ -20,11 +20,11 @@ export const AuthProvider = ({ children }) => {
             try {
                 setStatus('NEGOTIATING SESSION...')
 
-                // Add a specific timeout for the session fetch itself
                 const sessionPromise = supabase.auth.getSession()
                 const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('NETWORK TIMEOUT: Secure channel negotiation failed.')), 6000)
+                    setTimeout(() => reject(new Error('NETWORK TIMEOUT: Secure channel negotiation failed after 12s.')), 12000)
                 )
+
 
                 const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise])
 
@@ -49,7 +49,8 @@ export const AuthProvider = ({ children }) => {
                 setStatus('TIMEOUT: PROCEEDING WITH CAUTION...')
                 setLoading(false)
             }
-        }, 8000)
+        }, 15000)
+
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {

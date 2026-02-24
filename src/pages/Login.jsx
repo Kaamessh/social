@@ -22,11 +22,16 @@ const Login = () => {
             if (error) throw error
             navigate('/')
         } catch (err) {
-            setError(err.message)
+            if (err.message.includes('fetch')) {
+                setError('NETWORK ERROR: Cannot reach Supabase. Please verify your VITE_SUPABASE_URL and Internet connection.')
+            } else {
+                setError(err.message)
+            }
         } finally {
             setLoading(false)
         }
     }
+
 
 
     return (

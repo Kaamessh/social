@@ -131,19 +131,43 @@ export const AuthProvider = ({ children }) => {
     }
 
     return (
-
         <AuthContext.Provider value={value}>
-            {loading ? (
+            {initError ? (
+                <div className="container" style={{ textAlign: 'center', marginTop: '5rem' }}>
+                    <div className="card" style={{ border: '4px solid var(--danger)', padding: '3rem' }}>
+                        <h1 style={{ color: 'var(--danger)', fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem' }}>CONNECTIVITY FAILURE</h1>
+                        <div style={{ background: '#fffafa', padding: '1.5rem', border: '1px solid var(--danger)', textAlign: 'left' }}>
+                            <p style={{ fontWeight: 800, color: 'var(--danger)', marginBottom: '1rem' }}>❌ ERROR: {initError}</p>
+                            <p style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
+                                The application cannot communicate with the secure server. This is usually caused by:
+                            </p>
+                            <ul style={{ fontSize: '0.85rem', marginTop: '1rem', lineHeight: '2' }}>
+                                <li><strong>Invalid URL:</strong> Check your <code>VITE_SUPABASE_URL</code></li>
+                                <li><strong>Network Block:</strong> DNS failure or Firewall blocking Supabase</li>
+                                <li><strong>Vercel Env Vars:</strong> Missing or wrongly named variables</li>
+                            </ul>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="btn btn-primary"
+                                style={{ marginTop: '2rem', width: '100%' }}
+                            >
+                                RETRY CONNECTION
+                            </button>
+                        </div>
+                    </div>
+                    <div style={{ marginTop: '2rem', fontSize: '0.6rem', opacity: 0.5 }}>HELLOALL SECURE ARCHITECTURE - DETECTED URL: {mask(urlParam)}</div>
+                </div>
+            ) : loading ? (
                 <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh' }}>
                     <div style={{ color: 'var(--primary)', fontWeight: 900, letterSpacing: '2px', fontSize: '0.8rem' }}>
                         {status}
                     </div>
-                    {initError && <div style={{ color: 'var(--danger)', marginTop: '1rem' }}>ERROR: {initError}</div>}
                     <div style={{ marginTop: '2rem', fontSize: '0.6rem', opacity: 0.5 }}>HELLOALL SECURE ARCHITECTURE</div>
                 </div>
             ) : children}
         </AuthContext.Provider>
     )
+
 
 }
 

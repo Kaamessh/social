@@ -166,15 +166,19 @@ export const AuthProvider = ({ children }) => {
                     <div className="card" style={{ border: '4px solid var(--danger)', padding: '3rem' }}>
                         <h1 style={{ color: 'var(--danger)', fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem' }}>CONNECTIVITY FAILURE</h1>
                         <div style={{ background: '#fffafa', padding: '1.5rem', border: '1px solid var(--danger)', textAlign: 'left' }}>
-                            <p style={{ fontWeight: 800, color: 'var(--danger)', marginBottom: '1rem' }}>❌ ERROR: {initError}</p>
+                            <p style={{ fontWeight: 800, color: 'var(--danger)', marginBottom: '1rem' }}>⚠️ SERVER SIDE FAILURE: {initError.includes('LockManager') ? 'Database Gateway Stalled' : initError}</p>
                             <p style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
-                                The application cannot communicate with the secure server. This is usually caused by:
+                                Your project URL is active in the dashboard but <strong>refusing all connections</strong>. This is common when a project is stuck in "Waking Up" mode.
                             </p>
-                            <ul style={{ fontSize: '0.85rem', marginTop: '1rem', lineHeight: '2' }}>
-                                <li><strong>Invalid URL:</strong> Check your <code>VITE_SUPABASE_URL</code></li>
-                                <li><strong>Network Block:</strong> DNS failure or Firewall blocking Supabase</li>
-                                <li><strong>Vercel Env Vars:</strong> Missing or wrongly named variables</li>
-                            </ul>
+                            <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', padding: '1rem', borderRadius: '4px', marginTop: '1rem' }}>
+                                <p style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--danger)' }}>🚨 CRITICAL FIX STEPS:</p>
+                                <ol style={{ fontSize: '0.8rem', marginTop: '0.5rem', paddingLeft: '1.2rem', lineHeight: '1.8' }}>
+                                    <li><strong>Supabase Dashboard:</strong> Click <strong>"Pause Project"</strong> then <strong>"Restore"</strong> to restart the server.</li>
+                                    <li><strong>Fallback:</strong> Use your other project <strong>"Kaamesh"</strong> if this one stays unreachable.</li>
+                                    <li><strong>Check DNS:</strong> Ensure you don't have a VPN or Firewall blocking <code>supabase.co</code>.</li>
+                                </ol>
+                            </div>
+
                             <button
                                 onClick={() => window.location.reload()}
                                 className="btn btn-primary"

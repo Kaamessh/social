@@ -211,7 +211,8 @@ export const AuthProvider = ({ children }) => {
                             </div>
                         </div>
                     </div>
-                    <div style={{ marginTop: '2rem', fontSize: '0.6rem', opacity: 0.5 }}>HELLOALL SECURE ARCHITECTURE - DETECTED URL: {mask(urlParam)}</div>
+                    <div style={{ marginTop: '2rem', fontSize: '0.6rem', opacity: 0.5 }}>HELLOALL SECURE ARCHITECTURE - STABILITY_LAYER_V4 - DETECTED URL: {mask(urlParam)}</div>
+
                 </div>
 
             ) : loading ? (
